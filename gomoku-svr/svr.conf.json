@@ -1,0 +1,6 @@
+{
+    "port": 11011,
+    "max-connections": 1,
+    "max-connection-per-ip": 1,
+    "operation-timeout": 60
+}
