@@ -27,6 +27,9 @@ struct msg_t
     RTTR_ENABLE()
 public:
     u32 msg_type;
+
+    msg_t();
+    msg_t(u32 type);
 };
 
 /* 

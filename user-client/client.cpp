@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <boost/thread.hpp>
-#include "../utils/utils.h"
+#include "../utils/net_utils.h"
 using namespace std;
 
 const int       DEFAULT_PORT    = 11011;

@@ -19,7 +19,10 @@ if(WIN32)
 endif()
 
 set(SRC
+    ${PROJECT_SOURCE_DIR}/user_agent.cpp
+    ${PROJECT_SOURCE_DIR}/game.cpp
     ${PROJECT_SOURCE_DIR}/server.cpp
+    ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
 add_executable(server ${SRC})

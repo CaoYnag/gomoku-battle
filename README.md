@@ -1,12 +1,14 @@
 # gomoku-battle
 RUA!
 
-## Game Defination
+## Game
+
+### Game Defination
 - this game use a `15 * 15` board.
 - two player in a game, use `black` or `white` chess.
 - `black` chess always play first.
 
-## Game Progress
+### Game Progress
 1. game svr running, two player ready.
 2. player snd `[msg_reg]` to svr.
 3. svr return `[msg_result]` to player.
@@ -32,4 +34,8 @@ RUA!
 20. back to 9.
 
 
-## Message Defination
+### Message Defination
+
+## TODO
+
+- [ ] catch `C-c` signal to shutdown svr.

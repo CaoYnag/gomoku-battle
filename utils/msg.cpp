@@ -1,39 +1,42 @@
 #include "msg.h"
 using namespace std;
 
-msg_result::msg_result() {}
-msg_result::msg_result(u32 s, const string& r) : status(s), result(r)
+msg_t::msg_t() : msg_type(MSG_T_UNKNOWN) {}
+msg_t::msg_t(u32 type) : msg_type(type) {}
+
+msg_result::msg_result() : msg_t(MSG_T_RESULT) {}
+msg_result::msg_result(u32 s, const string& r) : msg_t(MSG_T_RESULT), status(s), result(r)
 {}
 
-msg_request::msg_request() {}
-msg_request::msg_request(u32 t, u32 o) : target(t), oper(o)
+msg_request::msg_request() : msg_t(MSG_T_REQUEST) {}
+msg_request::msg_request(u32 t, u32 o) : msg_t(MSG_T_REQUEST), target(t), oper(o)
 {}
 
-msg_reg::msg_reg() {}
-msg_reg::msg_reg(const string& n) : name(n)
+msg_reg::msg_reg() : msg_t(MSG_T_REGISTER) {}
+msg_reg::msg_reg(const string& n) : msg_t(MSG_T_REGISTER), name(n)
 {}
 
-msg_roomlist::msg_roomlist() {}
-msg_roomlist::msg_roomlist(const vector<room_t>& rms) : rooms(rms) {}
+msg_roomlist::msg_roomlist() : msg_t(MSG_T_ROOM_LIST) {}
+msg_roomlist::msg_roomlist(const vector<room_t>& rms) : msg_t(MSG_T_ROOM_LIST), rooms(rms) {}
 
-msg_room_oper::msg_room_oper() {}
-msg_room_oper::msg_room_oper(u32 t, const room_t& r) : type(t), room(r) {}
+msg_room_oper::msg_room_oper() : msg_t(MSG_T_ROOM_OPER) {}
+msg_room_oper::msg_room_oper(u32 t, const room_t& r) : msg_t(MSG_T_ROOM_OPER), type(t), room(r) {}
 
-msg_room_info::msg_room_info() {}
-msg_room_info::msg_room_info(u32 t, const string& n) : type(t), name(n) {}
+msg_room_info::msg_room_info() : msg_t(MSG_T_ROOM_INFO) {}
+msg_room_info::msg_room_info(u32 t, const string& n) : msg_t(MSG_T_ROOM_INFO), type(t), name(n) {}
 
-msg_chess::msg_chess() {}
-msg_chess::msg_chess(u32 t) : type(t) {}
+msg_chess::msg_chess() : msg_t(MSG_T_CHESS) {}
+msg_chess::msg_chess(u32 t) : msg_t(MSG_T_CHESS), type(t) {}
 
-msg_state::msg_state() {}
-msg_state::msg_state(u32 s) : state(s) {}
+msg_state::msg_state() : msg_t(MSG_T_STATE) {}
+msg_state::msg_state(u32 s) : msg_t(MSG_T_STATE), state(s) {}
 
-msg_game::msg_game() {}
-msg_game::msg_game(u32 s, u32 e) : state(s), ex(e) {}
+msg_game::msg_game() : msg_t(MSG_T_GAME) {}
+msg_game::msg_game(u32 s, u32 e) : msg_t(MSG_T_GAME), state(s), ex(e) {}
 
-msg_move::msg_move() {}
-msg_move::msg_move(u32 xx, u32 yy) : x(xx), y(yy) {}
-msg_move::msg_move(u32 c, u32 xx, u32 yy) : chess(c), x(xx), y(yy) {}
+msg_move::msg_move() : msg_t(MSG_T_MOVE) {}
+msg_move::msg_move(u32 xx, u32 yy) : msg_t(MSG_T_MOVE), x(xx), y(yy) {}
+msg_move::msg_move(u32 c, u32 xx, u32 yy) : msg_t(MSG_T_MOVE), chess(c), x(xx), y(yy) {}
 
 
 

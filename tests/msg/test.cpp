@@ -237,8 +237,9 @@ BOOST_AUTO_TEST_CASE(test_msg_move)
 	}
 	{
 		msg_move msg(1, 4, 14);
+		msg_move rslt;
 		auto raw = pack(msg);
-		auto rslt = unpack_move(raw);
+		unpack(raw, rslt);
 		info(raw);
 		info(rslt);
 		BOOST_REQUIRE_EQUAL(msg.chess, rslt.chess);
