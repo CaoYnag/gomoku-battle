@@ -170,6 +170,7 @@ u32 msg_type(const msg_raw_t& raw);
 template<class T>
 u32 unpack(const msg_raw_t& raw, T& msg)
 {
+    if(raw.empty()) return 1;
     try
     {
         deserialize(raw, msg);
@@ -179,16 +180,16 @@ u32 unpack(const msg_raw_t& raw, T& msg)
     }
     return 0;
 }
-msg_result unpack_result(const msg_raw_t& raw);
-msg_request unpack_request(const msg_raw_t& raw);
-msg_reg unpack_reg(const msg_raw_t& raw);
-msg_roomlist unpack_roomlist(const msg_raw_t& raw);
-msg_room_oper unpack_roomoper(const msg_raw_t& raw);
-msg_room_info unpack_roominfo(const msg_raw_t& raw);
-msg_chess unpack_chess(const msg_raw_t& raw);
-msg_state unpack_state(const msg_raw_t& raw);
-msg_game unpack_game(const msg_raw_t& raw);
-msg_move unpack_move(const msg_raw_t& raw);
+shared_ptr<msg_result> unpack_result(const msg_raw_t& raw);
+shared_ptr<msg_request> unpack_request(const msg_raw_t& raw);
+shared_ptr<msg_reg> unpack_reg(const msg_raw_t& raw);
+shared_ptr<msg_roomlist> unpack_roomlist(const msg_raw_t& raw);
+shared_ptr<msg_room_oper> unpack_roomoper(const msg_raw_t& raw);
+shared_ptr<msg_room_info> unpack_roominfo(const msg_raw_t& raw);
+shared_ptr<msg_chess> unpack_chess(const msg_raw_t& raw);
+shared_ptr<msg_state> unpack_state(const msg_raw_t& raw);
+shared_ptr<msg_game> unpack_game(const msg_raw_t& raw);
+shared_ptr<msg_move> unpack_move(const msg_raw_t& raw);
 
 
 RTTR_REGISTRATION

@@ -94,7 +94,6 @@ int TcpSock::init()
         return 1;
     }
     
-    
     return 0;
 }
 
@@ -137,12 +136,17 @@ shared_ptr<TcpSock> TcpSock::accept()
 
 int TcpSock::send(const string& data)
 {
-    return ::send(_sock, data.c_str(), data.length(), MSG_NOSIGNAL);
+    return ::send(_sock, data.c_str(), data.length(), MSG_NOSIGNAL); //MSG_NOSIGNAL
 }
 
 string TcpSock::recv(int buff_len)
 {
     char buff[buff_len];
     int n = ::recv(_sock, buff, buff_len, 0);
+    if(n <= 0)
+    {
+        spdlog::debug("error recv msg {}: {}", n, strerror(n));
+        return string();
+    }
     return string(buff, n);
 }

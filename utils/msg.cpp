@@ -39,8 +39,6 @@ msg_move::msg_move(u32 xx, u32 yy) : msg_t(MSG_T_MOVE), x(xx), y(yy) {}
 msg_move::msg_move(u32 c, u32 xx, u32 yy) : msg_t(MSG_T_MOVE), chess(c), x(xx), y(yy) {}
 
 
-
-
 u32 msg_type(const msg_raw_t& raw)
 {
     if(raw.length() == 0) return MSG_T_UNKNOWN;
@@ -56,63 +54,73 @@ u32 msg_type(const msg_raw_t& raw)
     }
     
 }
-msg_result unpack_result(const msg_raw_t& raw)
+shared_ptr<msg_result> unpack_result(const msg_raw_t& raw)
 {
-    msg_result ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_result>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_request unpack_request(const msg_raw_t& raw)
+shared_ptr<msg_request> unpack_request(const msg_raw_t& raw)
 {
-    msg_request ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_request>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_reg unpack_reg(const msg_raw_t& raw)
+shared_ptr<msg_reg> unpack_reg(const msg_raw_t& raw)
 {
-    msg_reg ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_reg>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_roomlist unpack_roomlist(const msg_raw_t& raw)
+shared_ptr<msg_roomlist> unpack_roomlist(const msg_raw_t& raw)
 {
-    msg_roomlist ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_roomlist>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_room_oper unpack_roomoper(const msg_raw_t& raw)
+shared_ptr<msg_room_oper> unpack_roomoper(const msg_raw_t& raw)
 {
-    msg_room_oper ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_room_oper>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_room_info unpack_roominfo(const msg_raw_t& raw)
+shared_ptr<msg_room_info> unpack_roominfo(const msg_raw_t& raw)
 {
-    msg_room_info ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_room_info>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_chess unpack_chess(const msg_raw_t& raw)
+shared_ptr<msg_chess> unpack_chess(const msg_raw_t& raw)
 {
-    msg_chess ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_chess>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_state unpack_state(const msg_raw_t& raw)
+shared_ptr<msg_state> unpack_state(const msg_raw_t& raw)
 {
-    msg_state ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_state>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_game unpack_game(const msg_raw_t& raw)
+shared_ptr<msg_game> unpack_game(const msg_raw_t& raw)
 {
-    msg_game ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_game>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }
-msg_move unpack_move(const msg_raw_t& raw)
+shared_ptr<msg_move> unpack_move(const msg_raw_t& raw)
 {
-    msg_move ret;
-    deserialize(raw, ret);
+    auto ret = make_shared<msg_move>();
+    int s = unpack(raw, *ret);
+    if(s) return nullptr;
     return ret;
 }

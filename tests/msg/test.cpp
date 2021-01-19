@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(test_msg_result)
 		auto raw = pack(msg);
 		auto rslt = unpack_result(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.status, rslt.status);
-		BOOST_REQUIRE_EQUAL(msg.result, rslt.result);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.status, rslt->status);
+		BOOST_REQUIRE_EQUAL(msg.result, rslt->result);
 	}
 
 	{
@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE(test_msg_result)
 		auto raw = pack(msg);
 		auto rslt = unpack_result(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.status, rslt.status);
-		BOOST_REQUIRE_EQUAL(msg.result, rslt.result);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.status, rslt->status);
+		BOOST_REQUIRE_EQUAL(msg.result, rslt->result);
 	}
 }
 
@@ -87,9 +87,9 @@ BOOST_AUTO_TEST_CASE(test_msg_request)
 		auto raw = pack(msg);
 		auto rslt = unpack_request(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.target, rslt.target);
-		BOOST_REQUIRE_EQUAL(msg.oper, rslt.oper);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.target, rslt->target);
+		BOOST_REQUIRE_EQUAL(msg.oper, rslt->oper);
 	}
 
 	{
@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE(test_msg_request)
 		auto raw = pack(msg);
 		auto rslt = unpack_request(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.target, rslt.target);
-		BOOST_REQUIRE_EQUAL(msg.oper, rslt.oper);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.target, rslt->target);
+		BOOST_REQUIRE_EQUAL(msg.oper, rslt->oper);
 	}
 }
 
@@ -111,16 +111,16 @@ BOOST_AUTO_TEST_CASE(test_msg_reg)
 		auto raw = pack(msg);
 		auto rslt = unpack_reg(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.name, rslt.name);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.name, rslt->name);
 	}
 	{
 		msg_reg msg("dasfsafagasawadsad");
 		auto raw = pack(msg);
 		auto rslt = unpack_reg(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.name, rslt.name);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.name, rslt->name);
 	}
 }
 
@@ -136,14 +136,14 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 		auto raw = pack(msg);
 		auto rslt = unpack_roomlist(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.rooms.size(), rslt.rooms.size());
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.rooms.size(), rslt->rooms.size());
 		for(int i = 0; i < msg.rooms.size(); ++i)
 		{
-			BOOST_REQUIRE_EQUAL(msg.rooms[i].id, rslt.rooms[i].id);
-			BOOST_REQUIRE_EQUAL(msg.rooms[i].name, rslt.rooms[i].name);
-			BOOST_REQUIRE_EQUAL(msg.rooms[i].psw, rslt.rooms[i].psw);
-			BOOST_REQUIRE_EQUAL(msg.rooms[i].state, rslt.rooms[i].state);
+			BOOST_REQUIRE_EQUAL(msg.rooms[i].id, rslt->rooms[i].id);
+			BOOST_REQUIRE_EQUAL(msg.rooms[i].name, rslt->rooms[i].name);
+			BOOST_REQUIRE_EQUAL(msg.rooms[i].psw, rslt->rooms[i].psw);
+			BOOST_REQUIRE_EQUAL(msg.rooms[i].state, rslt->rooms[i].state);
 		}
 	}
 }
@@ -155,12 +155,12 @@ BOOST_AUTO_TEST_CASE(test_msg_room_oper)
 		auto raw = pack(msg);
 		auto rslt = unpack_roomoper(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.type, rslt.type);
-		BOOST_REQUIRE_EQUAL(msg.room.id, rslt.room.id);
-		BOOST_REQUIRE_EQUAL(msg.room.name, rslt.room.name);
-		BOOST_REQUIRE_EQUAL(msg.room.psw, rslt.room.psw);
-		BOOST_REQUIRE_EQUAL(msg.room.state, rslt.room.state);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.type, rslt->type);
+		BOOST_REQUIRE_EQUAL(msg.room.id, rslt->room.id);
+		BOOST_REQUIRE_EQUAL(msg.room.name, rslt->room.name);
+		BOOST_REQUIRE_EQUAL(msg.room.psw, rslt->room.psw);
+		BOOST_REQUIRE_EQUAL(msg.room.state, rslt->room.state);
 	}
 }
 
@@ -171,9 +171,9 @@ BOOST_AUTO_TEST_CASE(test_msg_room_info)
 		auto raw = pack(msg);
 		auto rslt = unpack_roominfo(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.type, rslt.type);
-		BOOST_REQUIRE_EQUAL(msg.name, rslt.name);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.type, rslt->type);
+		BOOST_REQUIRE_EQUAL(msg.name, rslt->name);
 	}
 }
 
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(test_msg_chess)
 		auto raw = pack(msg);
 		auto rslt = unpack_chess(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.type, rslt.type);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.type, rslt->type);
 	}
 }
 
@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_CASE(test_msg_state)
 		auto raw = pack(msg);
 		auto rslt = unpack_state(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.state, rslt.state);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.state, rslt->state);
 	}
 }
 
@@ -208,18 +208,18 @@ BOOST_AUTO_TEST_CASE(test_msg_game)
 		auto raw = pack(msg);
 		auto rslt = unpack_game(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.state, rslt.state);
-		BOOST_REQUIRE_EQUAL(msg.ex, rslt.ex);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.state, rslt->state);
+		BOOST_REQUIRE_EQUAL(msg.ex, rslt->ex);
 	}
 	{
 		msg_game msg(1, 2);
 		auto raw = pack(msg);
 		auto rslt = unpack_game(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.state, rslt.state);
-		BOOST_REQUIRE_EQUAL(msg.ex, rslt.ex);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.state, rslt->state);
+		BOOST_REQUIRE_EQUAL(msg.ex, rslt->ex);
 	}
 }
 
@@ -230,20 +230,19 @@ BOOST_AUTO_TEST_CASE(test_msg_move)
 		auto raw = pack(msg);
 		auto rslt = unpack_move(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.chess, rslt.chess);
-		BOOST_REQUIRE_EQUAL(msg.x, rslt.y);
-		BOOST_REQUIRE_EQUAL(msg.x, rslt.y);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.chess, rslt->chess);
+		BOOST_REQUIRE_EQUAL(msg.x, rslt->x);
+		BOOST_REQUIRE_EQUAL(msg.y, rslt->y);
 	}
 	{
-		msg_move msg(1, 4, 14);
-		msg_move rslt;
+		msg_move msg(1, 7, 14);
 		auto raw = pack(msg);
-		unpack(raw, rslt);
+		auto rslt = unpack_move(raw);
 		info(raw);
-		info(rslt);
-		BOOST_REQUIRE_EQUAL(msg.chess, rslt.chess);
-		BOOST_REQUIRE_EQUAL(msg.x, rslt.x);
-		BOOST_REQUIRE_EQUAL(msg.y, rslt.y);
+		info(*rslt);
+		BOOST_REQUIRE_EQUAL(msg.chess, rslt->chess);
+		BOOST_REQUIRE_EQUAL(msg.x, rslt->x);
+		BOOST_REQUIRE_EQUAL(msg.y, rslt->y);
 	}
 }

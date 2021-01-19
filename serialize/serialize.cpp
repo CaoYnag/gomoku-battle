@@ -190,10 +190,10 @@ void serialize_recur(const instance& obj, json& j)
 	}
 }
 
-std::string io::serialize::serialize(const instance& obj)
+std::string io::serialize::serialize(const instance& obj, int dump)
 {
 	if (!obj.is_valid()) return string();
 	json j;
 	serialize_recur(obj, j);
-	return j.dump(4);
+	return j.dump(dump);
 }

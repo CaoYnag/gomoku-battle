@@ -8,7 +8,7 @@ namespace io::serialize
 	/*
 	* serialze an obj to json
 	*/
-	std::string serialize(const rttr::instance&);
+	std::string serialize(const rttr::instance&, int dump = -1);
 	/*
 	* construct an obj from json
 	*/

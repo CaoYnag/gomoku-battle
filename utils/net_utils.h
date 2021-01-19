@@ -34,6 +34,7 @@ public:
     inline string ip() {return _ip;}
     inline int port(){return _port;}
     inline SOCK sock(){return _sock;}
+    inline sockaddr_in addr(){return _addr;}
 
     /* communicate intfs */
     int listen(int conn = SOMAXCONN);

@@ -5,13 +5,13 @@
 #include "spdlog/sinks/syslog_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/fmt/ostr.h" // must be included
-#include "../../utils/net_utils.h"
+#include "../../utils/msg_sock.h"
 using namespace std;
 
 void init_log()
 {
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_level(spdlog::level::info);
+    console_sink->set_level(spdlog::level::trace);
     console_sink->set_pattern("[%Y-%m-%d %H:%M:%S %t][%l] %v");
 
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("server.log", true);
@@ -20,11 +20,13 @@ void init_log()
 
     spdlog::logger logger("multi_sink", {console_sink, file_sink});
     spdlog::set_default_logger(std::make_shared<spdlog::logger>(logger)); 
+	spdlog::set_level(spdlog::level::debug);
 }
 
 int main()
 {
-	TcpSock sock(7777);
+	init_log();
+	MsgSock sock(7777);
 	if(sock.init()) 
 	{
 		spdlog::error("error init socket.");
@@ -35,14 +37,22 @@ int main()
 		spdlog::error("error listen.");
 		return 1;
 	}
-	auto cli = sock.accept();
+	auto cli = sock.accept_msg_sock();
 	spdlog::info("recv conn from {}:{}", cli->ip(), cli->port());
-	string rcv = cli->recv();
-	while(!rcv.empty())
+	try
 	{
-		spdlog::info("recv msg: {}", rcv);
-		rcv = cli->recv();
+		auto rcv = cli->rcv_msg();
+		while(rcv)
+		{
+			spdlog::info("recv msg, type:{}", rcv->msg_type);
+			rcv = cli->rcv_msg();
+		}
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "error: " << e.what() << '\n';
+	}
+	
 	cli->close();
 	sock.close();
 

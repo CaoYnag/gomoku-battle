@@ -4,22 +4,32 @@
 
 class MsgSock : public TcpSock
 {
+protected:
+    string _tmp;
+    const char PACKET_BEGIN_CHAR = '<';
+    const char PACKET_END_CHAR = '>';
 public:
     MsgSock();
+    /* bugs when  */
+    MsgSock(shared_ptr<TcpSock> ptr);
     MsgSock(int port);
     MsgSock(const string& ip, int port);
     MsgSock(SOCK sock, const sockaddr_in& addr);
     virtual ~MsgSock();
+
+    shared_ptr<MsgSock> accept_msg_sock();
 public:
     template<class T>
     int send_msg(const T& msg)
     {
-        auto str = serialize(msg);
-        if(str.empty()) return 1;
-        return send(str);
+        auto raw = pack(msg);
+        if(raw.empty()) return 1;
+        raw = PACKET_BEGIN_CHAR + raw + PACKET_END_CHAR;
+        return send(raw);
     }
+    shared_ptr<msg_t> rcv_msg();
 
-    /* original msg snd/rcv */
+    /* msg snd intfs */
     int rslt(u32 stat, const string& rslt);
     int req_rooms();
     int req(u32 target, u32 oper);
