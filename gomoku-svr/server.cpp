@@ -5,8 +5,16 @@
 #include <ctime>
 #include <spdlog/spdlog.h>
 #include "server.h"
-#include "../utils/config.h"
+#include "def.h"
 
+
+shared_ptr<Server> Server::_inst = nullptr;
+
+shared_ptr<Server> Server::get()
+{
+    if(!_inst) _inst = make_shared<Server>();
+    return _inst;
+}
 
 Server::Server() : _running(0)
 {}
@@ -15,39 +23,11 @@ Server::~Server()
     _svr->close();
 }
 
-int Server::init_params(const char* conf_path)
+int Server::init()
 {
-    auto conf = spes::conf::get(conf_path);
-    if(!conf)
-    {
-        spdlog::error("error read conf file [{}]", conf_path);
-        return 1;
-    }
-
-    PORT = conf->GetInt("port");
-    MAX_CONN = conf->GetInt("max-connections");
-    MAX_CONN_PER_IP = conf->GetInt("max-connection-per-ip");
-    OPER_TIMEOUT = conf->GetInt("operation-timeout");
-
-    spdlog::info("svr configurations:\n\tport: {}\n\tconn limit: {} {}\n\toper timeout: {}s.\n",
-        PORT, MAX_CONN, MAX_CONN_PER_IP, OPER_TIMEOUT);
-
-    return 0;
-}
-int Server::init_svr()
-{
-    _svr = make_shared<MsgSock>(PORT);
+    _svr = make_shared<MsgSock>(GlobalConf::get()->PORT);
     _svr->listen();
-    spdlog::info("server listening in [{}].", PORT);
-    return 0;
-}
-
-int Server::init(const char* conf_path)
-{
-    boost::lock_guard<boost::mutex> lock(_guard);
-    if(init_params(conf_path)) return 1;
-    if(init_svr()) return 1;
-    _running = 1;
+    spdlog::info("server listening in [{}].", GlobalConf::get()->PORT);
     return 0;
 }
 
@@ -55,10 +35,57 @@ void Server::service()
 {
     while(_running)
     {
+        auto cli = _svr->accept_msg_sock();
+        boost::thread(boost::bind(&Server::handle_reg, this, cli)).detach();
     }
+}
+
+void Server::handle_reg(shared_ptr<MsgSock> sock)
+{
+    _failures[sock] = 0;
+    auto msg = sock->rcv_msg();
+    while(!msg || msg->msg_type != MSG_T_REGISTER)
+    {
+        if(fail(sock)) break;
+        sock->rslt(RSLT_NEED_REGISTER, "register first.");
+        msg = sock->rcv_msg();
+    }
+
+    if(!msg || msg->msg_type != MSG_T_REGISTER)
+    {
+        release_conn(sock);
+        return;
+    }
+    auto reg_msg = static_pointer_cast<msg_reg>(msg);
+    try
+    {
+        auto agent = reg(sock, reg_msg->name);
+        sock->rslt(RSLT_SUCSS, "success");
+
+        agent->mainloop();
+    }
+    catch(const std::exception& e)
+    {
+        // reg fail.
+        sock->rslt(RSLT_FAIL, e.what());
+    }
+}
+void Server::release_conn(shared_ptr<MsgSock> sock)
+{
+    // TODO close conn, clear conns, failures and others
+}
+
+bool Server::fail(shared_ptr<MsgSock> sock)
+{
+    boost::lock_guard<boost::mutex> lock(_failure_guard);
+    if(!_failures.count(sock))
+        _failures[sock] = 1;
+    else ++_failures[sock];
+    return _failures[sock] >= GlobalConf::get()->MAX_ILLEGAL_OPER;
 }
 
 void Server::shutdown()
 {
-
+    _running = false;
+    // release all resource here.
 }

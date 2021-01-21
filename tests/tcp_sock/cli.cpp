@@ -36,6 +36,7 @@ int main()
 		return 1;
 	}
 	sock.send("ping");
+	cout << "recv: " << sock.recv() << endl;
 	sock.close();
 
 	return 0;

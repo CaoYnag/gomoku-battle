@@ -38,6 +38,7 @@ int main()
 	auto cli = sock.accept();
 	spdlog::info("recv conn from {}:{}", cli->ip(), cli->port());
 	spdlog::info("recv msg: {}", cli->recv());
+	cli->send("42");
 	cli->close();
 	sock.close();
 

@@ -1,6 +1,8 @@
 {
     "port": 11011,
+    "ctrl-port": 10101,
     "max-connections": 1,
     "max-connection-per-ip": 1,
-    "operation-timeout": 60
+    "operation-timeout": 60,
+    "max-illegal-oper": 3
 }

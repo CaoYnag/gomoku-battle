@@ -15,7 +15,12 @@ typedef unsigned long long u64;
 typedef float f32;
 typedef double f64;
 
+constexpr const u32 RSLT_SUCSS          = 0x0;
+constexpr const u32 RSLT_FAIL           = 0x1;
+constexpr const u32 RSLT_NEED_REGISTER  = 0x2;
 
+constexpr const u32 REQ_ROOM_LIST       = 0x1;
+constexpr const u32 REQ_GAME_START      = 0x2;
 
 constexpr const u32 CHESS_BLACK       = 0x1;
 constexpr const u32 CHESS_WHITE       = 0x2;
@@ -30,6 +35,7 @@ constexpr const u32 GAME_TARGET_ROOM  = 0x1;
 constexpr const u32 ROOM_INFO_UNKNOWN = 0x0;
 constexpr const u32 ROOM_INFO_JOIN    = 0x1;
 constexpr const u32 ROOM_INFO_EXIT    = 0x2;
+constexpr const u32 ROOM_INFO_OWNER   = 0x3;
 
 constexpr const u32 USER_STATE_PREPARE = 0x1;
 constexpr const u32 USER_STATE_READY   = 0x2;
@@ -51,6 +57,7 @@ struct player_t
 
     player_t();
     player_t(u32 d, const string& n, const string& i, u32 p);
+    player_t(u32 d, const string& n);
 };
 
 struct room_t

@@ -5,6 +5,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 // user defined types logging by implementing operator<<
 #include "spdlog/fmt/ostr.h" // must be included
+#include "def.h"
 #include "server.h"
 using namespace std;
 
@@ -30,14 +31,14 @@ int main(int argc, char* argv[])
         conf_path = argv[1];
 
     init_log();
-    Server svr;
-    if(svr.init(conf_path))
+    if(GlobalConf::init(conf_path))
     {
-        spdlog::error("error start server, exiting...");
+        spdlog::error("error init configuraion, exiting...");
         return 1;
     }
-
-    svr.service();
+    auto svr = Server::get();
+    svr->init();
+    svr->service();
     
     return 0;
 }
