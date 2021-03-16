@@ -2,7 +2,7 @@
 #include <map>
 #include <vector>
 #include "../utils/msg_sock.h"
-#include "user_agent.h"
+#include "game.h"
 using namespace std;
 
 class Server
@@ -30,6 +30,9 @@ public:
 
     /* handle registration */
     void handle_reg(shared_ptr<MsgSock> sock);
+
+    /* some data intf */
+    shared_ptr<room_t> getroom(const string& name);
 public:
     /* some management intf */
 
@@ -47,9 +50,27 @@ public:
     * and if join succ, svr should notice room owner.
     **/
     string join_room(const string& player, const string& name, const string& psw);
+    /*
+     * player exit room.
+     * if fail, throw an exception.
+     * if succ, notice remain player. if no player remain, destroy room.
+     */
+    void exit_room(shared_ptr<room_t> room, const string& name);
     /* get room list */
     int roomlist(vector<room_t>& rooms);
-
+    /* change chess type */
+    int changechess(shared_ptr<room_t> room, const string& name, u32 ct);
+    /* change state */
+    void changestate(shared_ptr<room_t> room, const string& name, u32 state);
+    /* 
+     * start game
+     * if succ, start a game thread.
+     * if fail, throw an exception with failed msg.
+     * failure situation:
+     *   user not room owner
+     *   player not enough or ready.
+     */
+    void startgame(shared_ptr<room_t> room, const string& name);
 private:
     Server();
     Server(const Server&) = delete;

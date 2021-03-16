@@ -136,9 +136,11 @@ struct msg_game : public msg_t
 public:
     u32 state;
     u32 ex;
+    string message;
 
     msg_game();
     msg_game(u32 s, u32 e);
+    msg_game(u32 s, u32 e, const string& m);
 };
 
 struct msg_move : public msg_t
@@ -194,57 +196,58 @@ shared_ptr<msg_move> unpack_move(const msg_raw_t& raw);
 
 RTTR_REGISTRATION
 {
-	registration::class_<player_t>("Player")
-		.constructor<>()
-		.property("id", &player_t::id)
-		.property("name", &player_t::name)
-		.property("ip", &player_t::ip)
-		.property("port", &player_t::port);
-	registration::class_<room_t>("Room")
-		.constructor<>()
-		.property("id", &room_t::id)
-		.property("name", &room_t::name)
-		.property("psw", &room_t::psw)
-		.property("state", &room_t::state);
-
-	registration::class_<msg_t>("Msg")
-		.constructor<>()
-		.property("msg_type", &msg_t::msg_type);
-	registration::class_<msg_result>("Result")
-		.constructor<>()
-		.property("status", &msg_result::status)
-		.property("result", &msg_result::result);
-	registration::class_<msg_request>("Request")
-		.constructor<>()
-		.property("oper", &msg_request::oper)
-		.property("target", &msg_request::target);
-	registration::class_<msg_reg>("Register")
-		.constructor<>()
-		.property("name", &msg_reg::name);
-	registration::class_<msg_roomlist>("RoomList")
-		.constructor<>()
-		.property("rooms", &msg_roomlist::rooms);
-	registration::class_<msg_room_oper>("RoomOper")
-		.constructor<>()
-		.property("type", &msg_room_oper::type)
-		.property("room", &msg_room_oper::room);
-	registration::class_<msg_room_info>("RoomInfo")
-		.constructor<>()
-		.property("type", &msg_room_info::type)
-		.property("name", &msg_room_info::name);
-	registration::class_<msg_chess>("Chess")
-		.constructor<>()
-		.property("type", &msg_chess::type);
-	registration::class_<msg_state>("State")
-		.constructor<>()
-		.property("state", &msg_state::state);
-	registration::class_<msg_game>("Game")
-		.constructor<>()
-		.property("state", &msg_game::state)
-		.property("ex", &msg_game::ex);
-	registration::class_<msg_move>("Move")
-		.constructor<>()
-		.property("chess", &msg_move::chess)
-		.property("x", &msg_move::x)
-		.property("y", &msg_move::y);
+    registration::class_<player_t>("Player")
+	.constructor<>()
+	.property("id", &player_t::id)
+	.property("name", &player_t::name)
+	.property("ip", &player_t::ip)
+	.property("port", &player_t::port);
+    registration::class_<room_t>("Room")
+	.constructor<>()
+	.property("id", &room_t::id)
+	.property("name", &room_t::name)
+	.property("psw", &room_t::psw)
+	.property("state", &room_t::state);
+    
+    registration::class_<msg_t>("Msg")
+	.constructor<>()
+	.property("msg_type", &msg_t::msg_type);
+    registration::class_<msg_result>("Result")
+	.constructor<>()
+	.property("status", &msg_result::status)
+	.property("result", &msg_result::result);
+    registration::class_<msg_request>("Request")
+	.constructor<>()
+	    .property("oper", &msg_request::oper)
+	.property("target", &msg_request::target);
+    registration::class_<msg_reg>("Register")
+	.constructor<>()
+	.property("name", &msg_reg::name);
+    registration::class_<msg_roomlist>("RoomList")
+	.constructor<>()
+	.property("rooms", &msg_roomlist::rooms);
+    registration::class_<msg_room_oper>("RoomOper")
+	.constructor<>()
+	.property("type", &msg_room_oper::type)
+	.property("room", &msg_room_oper::room);
+    registration::class_<msg_room_info>("RoomInfo")
+	.constructor<>()
+	.property("type", &msg_room_info::type)
+	.property("name", &msg_room_info::name);
+    registration::class_<msg_chess>("Chess")
+	.constructor<>()
+	.property("type", &msg_chess::type);
+    registration::class_<msg_state>("State")
+	.constructor<>()
+	.property("state", &msg_state::state);
+    registration::class_<msg_game>("Game")
+	.constructor<>()
+	.property("state", &msg_game::state)
+	.property("ex", &msg_game::ex)
+	.property("message", &msg_game::message);
+    registration::class_<msg_move>("Move")
+	.constructor<>()
+	.property("chess", &msg_move::chess)
+	.property("x", &msg_move::x)
+	.property("y", &msg_move::y);
 }

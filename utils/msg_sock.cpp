@@ -180,6 +180,11 @@ int MsgSock::user_state(u32 state)
     return send_msg(msg_state(state));
 }
 
+int MsgSock::game_start()
+{
+    return snd_game(GAME_STATE_RUNNING, 0);
+}
+
 int MsgSock::game_win()
 {
     return snd_game(GAME_STATE_END, GAME_RSLT_WIN);
@@ -193,6 +198,10 @@ int MsgSock::game_lose()
 int MsgSock::game_draw()
 {
     return snd_game(GAME_STATE_END, GAME_RSLT_DRAW);
+}
+int MsgSock::game_err(const string& msg)
+{
+    return send_msg(msg_game(GAME_STATE_END, GAME_RSLT_ERROR, msg));
 }
 
 int MsgSock::snd_game(u32 state, u32 ex)

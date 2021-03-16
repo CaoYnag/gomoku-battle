@@ -15,15 +15,19 @@ typedef unsigned long long u64;
 typedef float f32;
 typedef double f64;
 
+constexpr const int BOARD_SIZE = 15;
+constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
+
+constexpr const u32 CHESS_BLANK       = 0x0;
+constexpr const u32 CHESS_BLACK       = 0x1;
+constexpr const u32 CHESS_WHITE       = 0x10;
+
 constexpr const u32 RSLT_SUCSS          = 0x0;
 constexpr const u32 RSLT_FAIL           = 0x1;
 constexpr const u32 RSLT_NEED_REGISTER  = 0x2;
 
 constexpr const u32 REQ_ROOM_LIST       = 0x1;
 constexpr const u32 REQ_GAME_START      = 0x2;
-
-constexpr const u32 CHESS_BLACK       = 0x1;
-constexpr const u32 CHESS_WHITE       = 0x2;
 
 constexpr const u32 ROOM_OPER_UNKNOWN = 0x0;
 constexpr const u32 ROOM_OPER_CREATE  = 0x1;
@@ -47,6 +51,7 @@ constexpr const u32 GAME_STATE_END     = 0x3;
 constexpr const u32 GAME_RSLT_WIN      = 0x1;
 constexpr const u32 GAME_RSLT_LOSE     = 0x2;
 constexpr const u32 GAME_RSLT_DRAW     = 0x3;
+constexpr const u32 GAME_RSLT_ERROR    = 0x4;
 
 struct player_t
 {

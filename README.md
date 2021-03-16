@@ -6,7 +6,7 @@ RUA!
 ### Game Defination
 - this game use a `15 * 15` board.
 - two player in a game, use `black` or `white` chess.
-- `black` chess always play first.
+- `white` chess always play first.
 
 ### Game Progress
 

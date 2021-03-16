@@ -1,0 +1,9 @@
+* TODO
+** Svr
+*** TODO logs
+add logs. record infomations about user operation and exceptions.
+*** TODO re-struct
+game and match should use defferent connections.
+*** TODO game-draw detect
+detect draw in Gomoku::check
+

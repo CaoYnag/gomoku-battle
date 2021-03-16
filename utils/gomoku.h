@@ -1,9 +1,23 @@
 #pragma once
+#include "def.h"
 
-/* some global defination */
-constexpr const int BOARD_SIZE = 15;
-constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
+class Gomoku
+{
+public:
+    int* _board;
+    int _size;
+    int _num;
+    int _state;
 
-constexpr const int CHESS_BLANK = 0x0;
-constexpr const int CHESS_BLACK = 0x1;
-constexpr const int CHESS_WHITE = 0x10;
+    Gomoku();
+    virtual ~Gomoku();
+protected:
+    void check(int x, int y);
+    void set(int x, int y, int v);
+public:
+    void start();
+    int end();
+
+    int get(int x, int y);
+    int put(int x, int y, int v);
+};

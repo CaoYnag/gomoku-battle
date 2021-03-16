@@ -46,9 +46,11 @@ public:
     int set_chess(u32 type);
     int snd_chess(u32 type);
     int user_state(u32 state);
+    int game_start();
     int game_win();
     int game_lose();
     int game_draw();
+    int game_err(const string& msg);
     int snd_game(u32 state, u32 ex);
     int move(u32 x, u32 y);
     int move(u32 chess, u32 x, u32 y);

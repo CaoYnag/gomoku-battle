@@ -12,7 +12,7 @@ shared_ptr<Server> Server::_inst = nullptr;
 
 shared_ptr<Server> Server::get()
 {
-    if(!_inst) _inst = make_shared<Server>();
+    if(!_inst) _inst = shared_ptr<Server>(new Server);
     return _inst;
 }
 
