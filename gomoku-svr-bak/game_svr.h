@@ -5,7 +5,7 @@
 #include "game.h"
 using namespace std;
 
-class Server
+class GameSvr
 {
 protected:
     vector<shared_ptr<UserAgent>> _players;
@@ -14,18 +14,14 @@ protected:
     shared_ptr<MsgSock> _svr;
     int _conn;
     map<string, shared_ptr<UserAgent>> _conns;
-    map<shared_ptr<MsgSock>, int> _failures;
-    boost::mutex _failure_guard;
     boost::atomic<int> _running;
-
 public:
-    virtual ~Server();
+    virtual ~GameSvr();
 
     int init();
     void service();
     void shutdown();
 
-    bool fail(shared_ptr<MsgSock> sock);
     void release_conn(shared_ptr<MsgSock> sock);
 
     /* handle registration */
@@ -72,9 +68,9 @@ public:
      */
     void startgame(shared_ptr<room_t> room, const string& name);
 private:
-    Server();
-    Server(const Server&) = delete;
-    static shared_ptr<Server> _inst;
+    GameSvr();
+    GameSvr(const GameSvr&) = delete;
+    static shared_ptr<GameSvr> _inst;
 public:
-    static shared_ptr<Server> get();
+    static shared_ptr<GameSvr> Get();
 };

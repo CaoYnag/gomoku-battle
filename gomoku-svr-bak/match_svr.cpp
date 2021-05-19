@@ -42,11 +42,10 @@ void Server::service()
 
 void Server::handle_reg(shared_ptr<MsgSock> sock)
 {
-    _failures[sock] = 0;
     auto msg = sock->rcv_msg();
     while(!msg || msg->msg_type != MSG_T_REGISTER)
     {
-        if(fail(sock)) break;
+        if(sock->fail()) break;
         sock->rslt(RSLT_NEED_REGISTER, "register first.");
         msg = sock->rcv_msg();
     }
@@ -73,15 +72,6 @@ void Server::handle_reg(shared_ptr<MsgSock> sock)
 void Server::release_conn(shared_ptr<MsgSock> sock)
 {
     // TODO close conn, clear conns, failures and others
-}
-
-bool Server::fail(shared_ptr<MsgSock> sock)
-{
-    boost::lock_guard<boost::mutex> lock(_failure_guard);
-    if(!_failures.count(sock))
-        _failures[sock] = 1;
-    else ++_failures[sock];
-    return _failures[sock] >= GlobalConf::get()->MAX_ILLEGAL_OPER;
 }
 
 void Server::shutdown()

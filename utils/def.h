@@ -34,6 +34,16 @@ constexpr const u32 ROOM_OPER_CREATE  = 0x1;
 constexpr const u32 ROOM_OPER_JOIN    = 0x2;
 constexpr const u32 ROOM_OPER_EXIT    = 0x3;
 
+constexpr const u32 PLAYER_STATE_IDLE    = 0x0;
+constexpr const u32 PLAYER_STATE_PREPARE = 0x1;
+constexpr const u32 PLAYER_STATE_OWNER   = 0x2;
+constexpr const u32 PLAYER_STATE_READY   = 0x3;
+
+/* not full, player can join this room */
+constexpr const u32 ROOM_STATE_OPEN   = 0x0; 
+constexpr const u32 ROOM_STATE_FULL   = 0x1;
+constexpr const u32 ROOM_STATE_MATCH  = 0x2;
+
 constexpr const u32 GAME_TARGET_ROOM  = 0x1;
 
 constexpr const u32 ROOM_INFO_UNKNOWN = 0x0;
@@ -57,12 +67,12 @@ struct player_t
 {
     u32 id;
     string name;
+    u32 state;
     string ip;
     u32 port;
 
     player_t();
-    player_t(u32 d, const string& n, const string& i, u32 p);
-    player_t(u32 d, const string& n);
+    player_t(u32 id, const string& name, u32 state, const string& ip, u32 port);
 };
 
 struct room_t
@@ -70,8 +80,11 @@ struct room_t
     u32 id;
     string name;
     string psw;
+    u32 oct;
     u32 state;
 
     room_t();
-    room_t(u32 i, const string& n, const string& p, u32 s);
+    room_t(const string& name, const string& psw);
+    room_t(u32 i, const string& n, const string& p, u32 oct, u32 s);
+    room_t(const room_t& room);
 };

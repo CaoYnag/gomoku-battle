@@ -1,19 +1,34 @@
 #include "msg_sock.h"
 #include <spdlog/spdlog.h>
 
-MsgSock::MsgSock() : TcpSock()
+int MsgSock::MAX_ILLEGAL_OPER = INT_MAX;
+
+MsgSock::MsgSock() : TcpSock(), _failures(0)
 {}
-MsgSock::MsgSock(shared_ptr<TcpSock> ptr) : TcpSock(ptr->sock(), ptr->addr())
+MsgSock::MsgSock(shared_ptr<TcpSock> ptr)
+    : TcpSock(ptr->sock(), ptr->addr()), _failures(0)
 {}
-MsgSock::MsgSock(int port) : TcpSock(port)
+MsgSock::MsgSock(int port) : TcpSock(port), _failures(0)
 {}
-MsgSock::MsgSock(const string& ip, int port) : TcpSock(ip, port)
+MsgSock::MsgSock(const string& ip, int port)
+    : TcpSock(ip, port), _failures(0)
 {}
-MsgSock::MsgSock(SOCK sock, const sockaddr_in& addr) : TcpSock(sock, addr)
+MsgSock::MsgSock(SOCK sock, const sockaddr_in& addr)
+    : TcpSock(sock, addr), _failures(0)
 {}
 MsgSock::~MsgSock()
 {}
 
+int MsgSock::fail()
+{
+    boost::lock_guard<boost::mutex> lock(_fguard);
+    return ++_failures > MAX_ILLEGAL_OPER;
+}
+
+void MsgSock::max_failures(int v)
+{
+    MAX_ILLEGAL_OPER = v;
+}
 
 shared_ptr<MsgSock> MsgSock::accept_msg_sock()
 {
@@ -132,17 +147,17 @@ int MsgSock::room_oper(u32 type, const room_t& room)
  // create/join/exit
 int MsgSock::create_room(const string& name, const string& psw)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_CREATE, room_t(0, name, psw, 0)));
+    return send_msg(msg_room_oper(ROOM_OPER_CREATE, room_t(name, psw)));
 }
 
 int MsgSock::join_room(const string& name, const string& psw)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_JOIN, room_t(0, name, psw, 0)));
+    return send_msg(msg_room_oper(ROOM_OPER_JOIN, room_t(name, psw)));
 }
 
 int MsgSock::exit_room(const string& name)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_EXIT, room_t(0, name, "", 0)));
+    return send_msg(msg_room_oper(ROOM_OPER_EXIT, room_t(name, "")));
 }
 
 int MsgSock::user_join_room(const string& name)

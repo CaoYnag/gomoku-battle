@@ -1,8 +1,11 @@
 #include "msg.h"
 using namespace std;
 
-msg_t::msg_t() : msg_type(MSG_T_UNKNOWN) {}
-msg_t::msg_t(u32 type) : msg_type(type) {}
+msg_t::msg_t() : msg_type(MSG_T_UNKNOWN), token(TOKEN_INVALID), session(SESSION_INVALID) {}
+msg_t::msg_t(u32 type) : msg_type(type), token(TOKEN_INVALID), session(SESSION_INVALID) {}
+msg_t::msg_t(u32 type, u64 token) : msg_type(type), token(token), session(SESSION_INVALID) {}
+msg_t::msg_t(u32 type, u64 session) : msg_type(type), token(TOKEN_INVALID), session(session) {}
+msg_t::msg_t(u32 type, u64 token, u64 session) : msg_type(type), token(token), session(session) {}
 
 msg_result::msg_result() : msg_t(MSG_T_RESULT) {}
 msg_result::msg_result(u32 s, const string& r) : msg_t(MSG_T_RESULT), status(s), result(r)

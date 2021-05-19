@@ -6,9 +6,6 @@
 #include <memory>
 using namespace std;
 
-/**
- * Game main logic.
-*/
 class Game
 {
 protected:
@@ -23,23 +20,6 @@ public:
     virtual ~Game();
 
 public:
-    /* some data intf */
-    // shared_ptr<Player> get_player(u32 id);
-    inline shared_ptr<Player> get_player(const string& name)
-    {
-        return _pmap[name];
-    } 
-    inline shared_ptr<Room> get_room(const string& name)
-    {
-        return _rmap[name];
-    }
-public:
-    /* 
-     * check if token valid for player. 
-     * this should be called in GameSvr when rcv a request.
-     */
-    bool validate_token(const string& player, u64 token);
-
     /*
      * check name format.
      * return true for success
@@ -68,11 +48,11 @@ public:
      */
     shared_ptr<room_t> create_room(const string& player, shared_ptr<room_t> room);
     /* 
-    * player join a room, if succ, return the room. 
+    * player join a room, if succ, return owner name. 
     * if fail, throw an exception. 
     * and if join succ, svr should notice room owner.
     **/
-    shared_ptr<room_t> join_room(const string& player, shared_ptr<room_t> room>);
+    string join_room(const string& player, shared_ptr<room_t> room>);
     /*
      * player exit room.
      * if fail, throw an exception.

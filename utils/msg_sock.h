@@ -1,11 +1,17 @@
 #pragma once
 #include "msg.h"
 #include "net_utils.h"
+#include <boost/thread.hpp>
 
 class MsgSock : public TcpSock
 {
 protected:
+    static int MAX_ILLEGAL_OPER;
+    
     string _tmp;
+    int _failures;
+    boost::mutex _fguard;
+    
     const char PACKET_BEGIN_CHAR = '<';
     const char PACKET_END_CHAR = '>';
 public:
@@ -18,6 +24,10 @@ public:
     virtual ~MsgSock();
 
     shared_ptr<MsgSock> accept_msg_sock();
+
+    int fail();
+
+    static void max_failures(int v);
 public:
     template<class T>
     int send_msg(const T& msg)

@@ -22,14 +22,23 @@ constexpr const u32 MSG_T_STATE      = 0x8;
 constexpr const u32 MSG_T_GAME       = 0x9;
 constexpr const u32 MSG_T_MOVE       = 0xa;
 
+constexpr const u64 TOKEN_INVALID    = -1;
+constexpr const u64 SESSION_INVALID  = -1;
+
+
 struct msg_t
 {
     RTTR_ENABLE()
 public:
     u32 msg_type;
+    u64 token;      // TODO -1 for invalid token
+    u64 session;    // 
 
     msg_t();
     msg_t(u32 type);
+    msg_t(u32 type, u64 token);
+    msg_t(u32 type, u64 session);
+    msg_t(u32 type, u64 token, u64 session);
 };
 
 /* 
@@ -200,6 +209,7 @@ RTTR_REGISTRATION
 	.constructor<>()
 	.property("id", &player_t::id)
 	.property("name", &player_t::name)
+	.property("state", &player_t::state)
 	.property("ip", &player_t::ip)
 	.property("port", &player_t::port);
     registration::class_<room_t>("Room")
@@ -207,11 +217,14 @@ RTTR_REGISTRATION
 	.property("id", &room_t::id)
 	.property("name", &room_t::name)
 	.property("psw", &room_t::psw)
+	.property("oct", &room_t::oct)
 	.property("state", &room_t::state);
     
     registration::class_<msg_t>("Msg")
 	.constructor<>()
 	.property("msg_type", &msg_t::msg_type);
+	.property("token", &msg_t::token);
+	.property("session", &msg_t::session);
     registration::class_<msg_result>("Result")
 	.constructor<>()
 	.property("status", &msg_result::status)
