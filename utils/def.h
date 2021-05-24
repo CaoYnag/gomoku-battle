@@ -18,6 +18,8 @@ typedef double f64;
 constexpr const int BOARD_SIZE = 15;
 constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
 
+constexpr const u32 ID_INVALID = -1;
+
 constexpr const u32 CHESS_BLANK       = 0x0;
 constexpr const u32 CHESS_BLACK       = 0x1;
 constexpr const u32 CHESS_WHITE       = 0x10;
@@ -72,7 +74,8 @@ struct player_t
     u32 port;
 
     player_t();
-    player_t(u32 id, const string& name, u32 state, const string& ip, u32 port);
+    player_t(const string& name);
+    Player_t(u32 id, const string& name, u32 state, const string& ip, u32 port);
 };
 
 struct room_t

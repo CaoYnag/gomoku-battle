@@ -36,8 +36,6 @@ public:
 
     msg_t();
     msg_t(u32 type);
-    msg_t(u32 type, u64 token);
-    msg_t(u32 type, u64 session);
     msg_t(u32 type, u64 token, u64 session);
 };
 
@@ -222,8 +220,8 @@ RTTR_REGISTRATION
     
     registration::class_<msg_t>("Msg")
 	.constructor<>()
-	.property("msg_type", &msg_t::msg_type);
-	.property("token", &msg_t::token);
+	.property("msg_type", &msg_t::msg_type)
+	.property("token", &msg_t::token)
 	.property("session", &msg_t::session);
     registration::class_<msg_result>("Result")
 	.constructor<>()

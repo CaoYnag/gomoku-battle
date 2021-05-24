@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 {
 	{
 		vector<room_t> rooms;
-		rooms.push_back(room_t(0, "room", "psw", 0));
-		rooms.push_back(room_t(1, "room2", "psw3", 1));
-		rooms.push_back(room_t(2, "aaaa", "xxxxx", 3));
+		rooms.push_back(room_t(0, "room", "psw", 0, 0));
+		rooms.push_back(room_t(1, "room2", "psw3", 1, 0));
+		rooms.push_back(room_t(2, "aaaa", "xxxxx", 3, 0));
 
 		msg_roomlist msg(rooms);
 		auto raw = pack(msg);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 BOOST_AUTO_TEST_CASE(test_msg_room_oper)
 {
 	{
-		msg_room_oper msg(0, room_t(0, "name", "psw", 0));
+	    msg_room_oper msg(0, room_t(0, "name", "psw", 0, 0));
 		auto raw = pack(msg);
 		auto rslt = unpack_roomoper(raw);
 		info(raw);

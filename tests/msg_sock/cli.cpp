@@ -40,10 +40,10 @@ int main()
     sock.req_rooms();
     sock.req(0, 0);
     sock.reg("name");
-	vector<room_t> rooms;
-	rooms.emplace_back(0, "name1", "", 0);
-	rooms.emplace_back(0, "name2", "psw2", 0);
-	rooms.emplace_back(0, "name3", "psw3", 0);
+    vector<room_t> rooms;
+    rooms.emplace_back(0, "name1", "", 0, 0);
+    rooms.emplace_back(0, "name2", "psw2", 0, 0);
+    rooms.emplace_back(0, "name3", "psw3", 0, 0);
     sock.roomlist(rooms);
     sock.room_oper(0, rooms[1]); // create/join/exit
     sock.create_room("name4", "psw4");
@@ -62,7 +62,7 @@ int main()
     sock.snd_game(0, 0);
     sock.move(1, 1);
     sock.move(0, 7, 7);
-	sock.close();
+    sock.close();
 
-	return 0;
+    return 0;
 }
