@@ -24,9 +24,7 @@ void init_log()
     spdlog::set_default_logger(std::make_shared<spdlog::logger>(logger)); 
 }
 
-typedef void(*vfoo)();
-
-void test_except(function<vfoo> foo)
+void test_except(const function<void()>& foo)
 {
     try
     {
@@ -63,7 +61,7 @@ void test_game()
     // try create room by unexists player
     test_except([&](){game->create_room("??", make_shared<room_t>("rr", "pp"));});
     // try create exists room
-    test_except([&](){game->create_room("p2", make_shared<room_t>(""));});
+    test_except([&](){game->create_room("p2", make_shared<room_t>("", ""));});
 
     // try join unexists room
     test_except([&](){game->join_room("p2", make_shared<room_t>("aa", "pp"));});
@@ -74,12 +72,15 @@ void test_game()
     game->join_room("p2", make_shared<room_t>("r1", "psw"));
 
     // try join full room.
+    test_except([&](){game->join_room("p3", make_shared<room_t>("r1", "psw"));});
+
+    // 
 }
 
 
 int main(int argc, char* argv[])
 {
     init_log();
-        
+    test_game();
     return 0;
 }
