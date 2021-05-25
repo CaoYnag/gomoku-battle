@@ -4,6 +4,7 @@
 #include <map>
 #include <thread>
 #include <memory>
+#include "match.h"
 using namespace std;
 
 /**
@@ -25,7 +26,7 @@ public:
 public:
     /* some data intf */
     // shared_ptr<Player> get_player(u32 id);
-    inline shared_ptr<Player> get_player(const string& name)
+    inline shared_ptr<player_t> get_player(const string& name)
     {
         return _pmap[name];
     } 
@@ -33,6 +34,8 @@ public:
     {
         return _rmap[name];
     }
+public:
+    /* some monitor intf here */
 public:
     /* 
      * check if token valid for player. 
@@ -47,6 +50,10 @@ public:
      */
     bool name_check(const string& name);
     /*
+     * check room name and psw format.
+     */
+    bool room_check(shared_ptr<room_t> room);
+    /*
      * generate id for player.
      */
     u32 gen_id();
@@ -58,7 +65,7 @@ public:
        * if succ, return the player pointer.
        * if failed, return nullptr.
     */
-    shared_ptr<player_t> register(shared_ptr<player_t> player);
+    shared_ptr<player_t> register_player(shared_ptr<player_t> player);
 
     /* room intfs */
     /* 
@@ -72,30 +79,48 @@ public:
     * if fail, throw an exception. 
     * and if join succ, svr should notice room owner.
     **/
-    shared_ptr<room_t> join_room(const string& player, shared_ptr<room_t> room>);
+    shared_ptr<room_t> join_room(const string& player, shared_ptr<room_t> room);
     /*
      * player exit room.
      * if fail, throw an exception.
      * if succ, notice remain player. if no player remain, destroy room.
      */
-    void exit_room(const string& player, shared_ptr<room_t> room);
-    /* get room list */
-    int roomlist(vector<room_t>& rooms);
-    /* change chess type */
-    int change_ct(shared_ptr<room_t> room, const string& player, u32 ct);
-    /* change state */
-    void change_state(shared_ptr<room_t> room, const string& player, u32 state);
+    void exit_room(const string& player, const string& room);
+    /*
+     * get room list
+     */
+    void roomlist(vector<shared_ptr<room_t>>&);
+    /*
+     * change chess type
+     * only owner can change chesstype.
+     * if succ changed. return R_OK.
+     * if no changes, return R_NOCHANGE.
+     * if fail, throw an exception for detail.
+     */
+    int change_ct(const string& room, const string& player, u32 ct);
+    /* 
+     * change state
+     * only guest can change state.
+     * if succ changed, return R_OK.
+     * if no changes, return R_NOCHANGE.
+     * if failed, throw an exception for detail.
+     */
+    int change_state(const string& room, const string& player, u32 state);
 
-    /* game operations */
     /* 
      * start game
-     * if succ, start a game thread.
+     * if succ, return match inst.
      * if fail, throw an exception with failed msg.
      * failure situation:
      *   user not room owner
      *   player not enough or ready.
      */
-    void start_game(shared_ptr<room_t> room, const string& name);
+    shared_ptr<Match> start_match(const string& room, const string& player);
+
+    /*
+     * callback when a match done.
+     */
+    void match_ovr(shared_ptr<Match> m);
 private:
     Game();
     Game(const Game&) = delete;

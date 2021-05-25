@@ -1,9 +1,13 @@
 * TODO
 ** Svr
+*** TODO room logic collide
+collide in Game and Room.
+*** TODO game stats
+record game statistics.
+** Server
 *** TODO logs
 add logs. record infomations about user operation and exceptions.
 *** TODO re-struct
 game and match should use defferent connections.
 *** TODO game-draw detect
 detect draw in Gomoku::check
-

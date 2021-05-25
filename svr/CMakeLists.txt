@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(game-server-demo)
+project(svr)
 
 if(WIN32)
 	if($ENV{LIB_BASE})
@@ -20,17 +20,13 @@ endif()
 
 set(SRC
     ${PROJECT_SOURCE_DIR}/room.cpp
-    ${PROJECT_SOURCE_DIR}/user_agent.cpp
-    ${PROJECT_SOURCE_DIR}/game_svr.cpp
     ${PROJECT_SOURCE_DIR}/game.cpp
-    ${PROJECT_SOURCE_DIR}/svr.cpp
-    ${PROJECT_SOURCE_DIR}/main.cpp
+    ${PROJECT_SOURCE_DIR}/match.cpp
 )
 
-add_executable(gameserver_demo ${SRC})
-target_link_libraries(gameserver_demo utils)
+add_library(svr ${SRC})
+target_link_libraries(svr utils)
 if(WIN32)
 endif()
 if(UNIX)
-	target_link_libraries(gameserver_demo pthread)
 endif()

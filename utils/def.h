@@ -1,3 +1,6 @@
+/*
+ * Some global defination.
+ */
 #pragma once
 #include <string>
 using namespace std;
@@ -15,6 +18,11 @@ typedef unsigned long long u64;
 typedef float f32;
 typedef double f64;
 
+/* some return value */
+constexpr const int S_OK = 0x0;
+constexpr const int S_NOCHANGE = 0x1;
+
+
 constexpr const int BOARD_SIZE = 15;
 constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
 
@@ -23,6 +31,7 @@ constexpr const u32 ID_INVALID = -1;
 constexpr const u32 CHESS_BLANK       = 0x0;
 constexpr const u32 CHESS_BLACK       = 0x1;
 constexpr const u32 CHESS_WHITE       = 0x10;
+constexpr const u32 CHESS_SUM         = CHESS_BLACK + CHESS_WHITE;
 
 constexpr const u32 RSLT_SUCSS          = 0x0;
 constexpr const u32 RSLT_FAIL           = 0x1;

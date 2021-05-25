@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(svr-logic-demo)
+project(test_svr)
 
 if(WIN32)
 	if($ENV{LIB_BASE})
@@ -19,14 +19,11 @@ if(WIN32)
 endif()
 
 set(SRC
-    ${PROJECT_SOURCE_DIR}/def.cpp
-    ${PROJECT_SOURCE_DIR}/room.cpp
-    ${PROJECT_SOURCE_DIR}/game.cpp
-    ${PROJECT_SOURCE_DIR}/main.cpp
+    ${PROJECT_SOURCE_DIR}/test.cpp
 )
 
-add_executable(svr-logic-demo ${SRC})
-target_link_libraries(svr-logic-demo utils)
+add_executable(test_svr ${SRC})
+target_link_libraries(test_svr svr utils)
 if(WIN32)
 endif()
 if(UNIX)

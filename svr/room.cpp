@@ -1,6 +1,5 @@
 #include "room.h"
 #include "game.h"
-#include "def.h"
 using namespace std;
 
 /*====================Room====================*/

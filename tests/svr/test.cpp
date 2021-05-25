@@ -4,8 +4,7 @@
 #include "spdlog/sinks/syslog_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/fmt/ostr.h"
-#include "def.h"
-#include "game.h"
+#include "../../svr/game.h"
 #include <functional>
 using namespace std;
 
@@ -74,7 +73,55 @@ void test_game()
     // try join full room.
     test_except([&](){game->join_room("p3", make_shared<room_t>("r1", "psw"));});
 
-    // 
+    // owner exit room
+    game->exit_room("p1", "r1");
+
+    // p2 become owner, exit too
+    game->exit_room("p2", "r1");
+
+    // so now room destroyed.
+    test_except([&](){game->join_room("p2", make_shared<room_t>("r1", "psw"));});
+
+    // create new one
+    game->create_room("p2", make_shared<room_t>("r1", "psw"));
+
+    // not-in-room player exit room
+    test_except([&](){game->exit_room("p3", "r1");});
+
+    // player join room again.
+    game->join_room("p3", make_shared<room_t>("r1", "psw"));
+
+    // guest change ct
+    test_except([&](){game->change_ct("r1", "p3", CHESS_WHITE);});
+
+    // wrong ct
+    test_except([&](){game->change_ct("r1", "p2", CHESS_BLANK);});
+
+    // owner change ct.
+    game->change_ct("r1", "p2", CHESS_WHITE);
+
+    // owner change state
+    test_except([&](){game->change_state("r1", "p2", PLAYER_STATE_READY);});
+
+    // guest not ready for match
+    test_except([&](){game->start_match("r1", "p2");});
+    
+    // guest change state
+    game->change_state("r1", "p3", PLAYER_STATE_READY);
+
+    // guest start game.
+    test_except([&](){game->start_match("r1", "p3");});
+
+    // start match
+    auto m = game->start_match("r1", "p2");
+    m->move("p2", 0, 0);
+    m->move("p2", 0, 1);
+    m->move("p2", 0, 2);
+    m->move("p2", 0, 3);
+    m->move("p2", 0, 4);
+
+    game->match_ovr(m);
+    
 }
 
 

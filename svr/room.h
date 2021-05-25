@@ -5,6 +5,7 @@
 #pragma once
 #include "../utils/def.h"
 #include <memory>
+#include <mutex>
 using namespace std;
 
 class Room : public room_t
