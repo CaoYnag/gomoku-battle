@@ -5,6 +5,10 @@ collide in Game and Room.
 *** TODO game stats
 record game statistics.
 ** Server
+*** TODO user token generator
+ip(32) + port(16) + cnt(16)
+*** TODO session generator
+use rand?
 *** TODO logs
 add logs. record infomations about user operation and exceptions.
 *** TODO re-struct
