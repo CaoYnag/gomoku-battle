@@ -4,6 +4,7 @@
 #include <ctime>
 #include <spdlog/spdlog.h>
 #include "conf.h"
+#include "../../utils/net_utils.h"
 using namespace std;
 
 shared_ptr<GameSvr> GameSvr::_inst = nullptr;
@@ -59,6 +60,7 @@ void GameSvr::handle_reg(shared_ptr<MsgSock> sock)
     try
     {
         auto agent = reg(sock, reg_msg->name); // TODO add token here
+	auto token = generate_token(agent->ip, agent->port);
         sock->rslt(RSLT_SUCSS, "success");
 
         agent->mainloop();

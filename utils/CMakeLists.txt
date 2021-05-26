@@ -4,6 +4,7 @@ project(utils)
 
 set(SRC
     ${PROJECT_SOURCE_DIR}/def.cpp
+    ${PROJECT_SOURCE_DIR}/utils.cpp
     ${PROJECT_SOURCE_DIR}/net_utils.cpp
     ${PROJECT_SOURCE_DIR}/config.cpp
     ${PROJECT_SOURCE_DIR}/msg.cpp

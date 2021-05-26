@@ -10,9 +10,7 @@ using namespace std;
 typedef int SOCK; 
  
 const char* getlocalip(const char* eth_inf);
-
 void getipportfromaddr(sockaddr_in* addr, char* ipstr, int ipstrlen, int* port);
-
 
 class TcpSock
 {

@@ -22,17 +22,17 @@ constexpr const u32 MSG_T_STATE      = 0x8;
 constexpr const u32 MSG_T_GAME       = 0x9;
 constexpr const u32 MSG_T_MOVE       = 0xa;
 
-constexpr const u64 TOKEN_INVALID    = -1;
-constexpr const u64 SESSION_INVALID  = -1;
+constexpr const u64 TOKEN_INVALID    = 0;
+constexpr const u64 SESSION_INVALID  = 0;
 
 
 struct msg_t
 {
     RTTR_ENABLE()
-public:
+    public:
     u32 msg_type;
-    u64 token;      // TODO -1 for invalid token
-    u64 session;    // 
+    u64 token;
+    u64 session;
 
     msg_t();
     msg_t(u32 type);
@@ -40,14 +40,14 @@ public:
 };
 
 /* 
-* result for some operation like reg, create, join and other.
-* status 0 for succ. and may not contain a result field.
-* other status value means sth happened
-*/
+ * result for some operation like reg, create, join and other.
+ * status 0 for succ. and may not contain a result field.
+ * other status value means sth happened
+ */
 struct msg_result : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 status;
     string result;
 
@@ -58,7 +58,7 @@ public:
 struct msg_request : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 target;
     u32 oper;
 
@@ -69,7 +69,7 @@ public:
 struct msg_reg : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     string name;
 
     msg_reg();
@@ -79,7 +79,7 @@ public:
 struct msg_roomlist : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     vector<room_t> rooms;
 
     msg_roomlist();
@@ -89,7 +89,7 @@ public:
 struct msg_room_oper : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 type;       // create/join
     room_t room;
 
@@ -101,7 +101,7 @@ public:
 struct msg_room_info : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 type;
     string name;
 
@@ -113,7 +113,7 @@ public:
 struct msg_chess : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 type;
 
     msg_chess();
@@ -121,13 +121,13 @@ public:
 };
 
 /* 
-* player state change.
-* ready or cancel ready
-*/
+ * player state change.
+ * ready or cancel ready
+ */
 struct msg_state : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 state;
 
     msg_state();
@@ -135,12 +135,12 @@ public:
 };
 
 /*
-* game states, like start, end
-*/
+ * game states, like start, end
+ */
 struct msg_game : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 state;
     u32 ex;
     string message;
@@ -153,7 +153,7 @@ public:
 struct msg_move : public msg_t
 {
     RTTR_ENABLE(msg_t)
-public:
+    public:
     u32 chess;
     u32 x, y;
 
@@ -229,7 +229,7 @@ RTTR_REGISTRATION
 	.property("result", &msg_result::result);
     registration::class_<msg_request>("Request")
 	.constructor<>()
-	    .property("oper", &msg_request::oper)
+	.property("oper", &msg_request::oper)
 	.property("target", &msg_request::target);
     registration::class_<msg_reg>("Register")
 	.constructor<>()

@@ -2,6 +2,6 @@
 
 namespace io::serialize
 {
-	const char* ASSOCIATE_KEY = "key";
-	const char* ASSOCIATE_VALUE = "value";
+    const char* ASSOCIATE_KEY = "key";
+    const char* ASSOCIATE_VALUE = "value";
 }

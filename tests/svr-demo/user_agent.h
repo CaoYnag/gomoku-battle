@@ -9,6 +9,7 @@ protected:
     u32 _type;
     u32 _chesstype;
     shared_ptr<room_t> _room;
+    u64 _token;
 protected:
     int idle(shared_ptr<msg_t> msg);
     int room(shared_ptr<msg_t> msg);
@@ -38,4 +39,7 @@ public:
 public:
     /* some sync oper */
     shared_ptr<msg_t> next_oper();
+
+public:
+    inline void token(u64 tk) { _token = tk; }
 };
