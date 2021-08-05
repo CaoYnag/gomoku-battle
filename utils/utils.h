@@ -5,7 +5,7 @@ template<typename T>
 class Wrapper
 {
 public:
-    virtual ~Wrapper();
+    virtual ~Wrapper(){}
 
     virtual T wrap(T t)
     {
