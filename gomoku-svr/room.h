@@ -5,15 +5,18 @@
 #pragma once
 #include "../utils/def.h"
 #include <memory>
+#include <mutex>
 using namespace std;
 
-class Room : public room_t
+class Room
 {
 public:
+	shared_ptr<room_t> _room;
     shared_ptr<player_t> _owner;
     shared_ptr<player_t> _guest;
+	mutex _guard;
 public:
-    Room(u32 i, const string& n, const string& p, u32 s, shared_ptr<player_t> owner);
+    Room(shared_ptr<room_t> room);
     ~Room();
 
     /*
@@ -26,4 +29,9 @@ public:
      * so if `0` is returned, this room need to be destroy
      */
     u32 leave(shared_ptr<player_t> user);
+
+	// return status code
+	u32 change_ct(shared_ptr<player_t> user, int ct);
+	// return status code
+	u32 change_state(shared_ptr<player_t> user, int state);
 };

@@ -11,8 +11,8 @@ u32 Match::player_ct(const string& player)
 {
     auto ct = CHESS_BLANK;
     
-    if(player == _room->_owner->name) ct = _room->oct;
-    if(player == _room->_guest->name) ct = CHESS_SUM - _room->oct;
+    if(player == _room->_owner->name) ct = _room->_room->oct;
+    if(player == _room->_guest->name) ct = CHESS_SUM - _room->_room->oct;
     return ct;
 }
 

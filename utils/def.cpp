@@ -1,5 +1,10 @@
 #include "def.h"
 
+string str_status_code(STATUS_CODE code)
+{
+	// TODO complete this later.
+	return "not implemented.";
+}
 
 player_t::player_t()
     : id(ID_INVALID), name(""), state(PLAYER_STATE_IDLE), ip(""), port(0) {}
@@ -17,5 +22,6 @@ room_t::room_t(u32 i, const string& n, const string& p, u32 t, u32 s)
     : id(i), name(n), psw(p), oct(t), state(s)
 {}
 room_t::room_t(const room_t& room)
-    : id(room.id), name(room.name), psw(room.psw), oct(room.oct), state(room.state)
+    : id(room.id), name(room.name), psw(room.psw), oct(room.oct), state(room.state),
+	  owner(room.owner), guest(room.guest)
 {}

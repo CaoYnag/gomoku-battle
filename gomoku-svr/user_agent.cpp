@@ -6,8 +6,8 @@ constexpr const u32 USER_STATE_ROOM = 1;    // created/joined a room
 constexpr const u32 USER_STATE_GAME = 2;    // started a match
 constexpr const u32 USER_STATE_ERR  = 0x8000;   // err/exited
 
-UserAgent::UserAgent(shared_ptr<MsgSock> sock, u32 id, const string& name)
-    : player_t(id, name, 0, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE)
+UserAgent::UserAgent(shared_ptr<MsgSock> sock, u32 id, const string& name, u64 token)
+    : player_t(id, name, 0, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE), _token(token)
 {}
 
 UserAgent::~UserAgent()

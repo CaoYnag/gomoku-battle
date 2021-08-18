@@ -4,6 +4,7 @@
 collide in Game and Room.
 *** TODO game stats
 record game statistics.
+*** TODO use some code to instead string msg.
 ** Server
 *** DONE user token generator
 ip(32) + port(16) + cnt(16)

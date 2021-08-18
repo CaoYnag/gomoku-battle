@@ -8,7 +8,21 @@
 using namespace std;
 
 /**
- * Game main logic.
+Game main logic
+
+this class contains all game logic.
+include player/room/game operations.
+
+1. Player
+a player name was limited in 36 characters. and some other restrictions.
+Game won't do additional check to identify player. it just use name to identify each player.
+Additional check should be done in GameSvr, which wraps this class.
+intfs:
+reg
+unreg
+
+2. Room
+
 */
 class Game
 {
@@ -22,7 +36,17 @@ protected:
 
 public:
     virtual ~Game();
-
+protected:
+	/* 
+	 * some helper functions 
+	 * all functions will modify datas directly.
+	 * so, make sure guard locked and data legally.
+	 */
+	
+	void add_player(shared_ptr<player_t> player);
+	void rm_player(const string& name);
+	void add_room(shared_ptr<Room> room);
+	void rm_room(const string& name);
 public:
     /* some data intf */
     // shared_ptr<Player> get_player(u32 id);
@@ -37,12 +61,6 @@ public:
 public:
     /* some monitor intf here */
 public:
-    /* 
-     * check if token valid for player. 
-     * this should be called in GameSvr when rcv a request.
-     */
-    bool validate_token(const string& player, u64 token);
-
     /*
      * check name format.
      * return true for success
@@ -61,61 +79,52 @@ public:
     /* interfaces */
 public:
     /* 
-       user intfs
-       * if succ, return the player pointer.
-       * if failed, return nullptr.
-    */
-    shared_ptr<player_t> register_player(shared_ptr<player_t> player);
-
-    /* room intfs */
+	 * S_PLAYER_INVALID_NAME for invalid name
+	 * S_PLAYER_EXISTS for player already exists.
+	 */ 
+	STATUS_CODE register_player(shared_ptr<player_t> player);
+	/*
+	 * S_PLAYER_INVALID
+	 * S_PLAYER_BUSY
+	 */
+	STATUS_CODE unregister_player(shared_ptr<player_t> player);
+	/*
+	 * S_ROOM_INVALID_NAME
+	 * S_ROOM_EXISTS
+	 */
+    STATUS_CODE create_room(const string& player, shared_ptr<room_t> room);
     /* 
-     * create a room.
-     * if succ, return created room pointer.
-     * if fail, throw an exception with error msg 
-     */
-    shared_ptr<room_t> create_room(const string& player, shared_ptr<room_t> room);
-    /* 
-    * player join a room, if succ, return the room. 
-    * if fail, throw an exception. 
-    * and if join succ, svr should notice room owner.
-    **/
-    shared_ptr<room_t> join_room(const string& player, shared_ptr<room_t> room);
+	 * S_ROOM_NOT_EXISTS
+	 * S_ROOM_FULL
+	 * S_ROOM_ILLEGAL_PSW
+	 * S_ROOM_ALREAY_INSIDE
+	 */
+    STATUS_CODE join_room(const string& player, shared_ptr<room_t> room);
     /*
-     * player exit room.
-     * if fail, throw an exception.
-     * if succ, notice remain player. if no player remain, destroy room.
+	 * S_ROOM_NOT_EXISTS
+	 * S_ROOM_ILLEGAL_OPER for not in room
+	 * if room empty after player exit, destroy this room
      */
-    void exit_room(const string& player, const string& room);
+    STATUS_CODE exit_room(const string& player, const string& room);
     /*
      * get room list
      */
     void roomlist(vector<shared_ptr<room_t>>&);
     /*
-     * change chess type
-     * only owner can change chesstype.
-     * if succ changed. return R_OK.
-     * if no changes, return R_NOCHANGE.
-     * if fail, throw an exception for detail.
+	 * S_ROOM_ILLEGAL_OPER for not owner, or invalid ct
      */
-    int change_ct(const string& room, const string& player, u32 ct);
+    STATUS_CODE change_ct(const string& room, const string& player, u32 ct);
     /* 
-     * change state
-     * only guest can change state.
-     * if succ changed, return R_OK.
-     * if no changes, return R_NOCHANGE.
-     * if failed, throw an exception for detail.
+	 * S_ROOM_ILLEGAL_OPER for not guest, or invalid state
      */
-    int change_state(const string& room, const string& player, u32 state);
+    STATUS_CODE change_state(const string& room, const string& player, u32 state);
 
     /* 
-     * start game
-     * if succ, return match inst.
-     * if fail, throw an exception with failed msg.
-     * failure situation:
-     *   user not room owner
-     *   player not enough or ready.
+	 * S_GAME_NO_GUEST
+	 * S_GAME_ILLEGAL_OPER not owner
      */
-    shared_ptr<Match> start_match(const string& room, const string& player);
+	// TODO how can i emit a match?
+    STATUS_CODE start_match(const string& room, const string& player);
 
     /*
      * callback when a match done.

@@ -45,7 +45,7 @@ void GameSvr::handle_reg(shared_ptr<MsgSock> sock)
     {
         if(sock->fail()) break;
         sock->rslt(RSLT_NEED_REGISTER, "register first.");
-        msg = sock->rcv_msg();
+        msg = sock->rcv_msg(); // TODO maybe need to set timeout here.
     }
 
     if(!msg || msg->msg_type != MSG_T_REGISTER)
@@ -56,8 +56,12 @@ void GameSvr::handle_reg(shared_ptr<MsgSock> sock)
     auto reg_msg = static_pointer_cast<msg_reg>(msg);
     try
     {
-        auto agent = reg(sock, reg_msg->name); // TODO add token here
-        sock->rslt(RSLT_SUCSS, "success");
+        // generate token, add put it in conns
+        auto agent = reg(sock, reg_msg->name, generate_token(sock->ip().c_str(), sock->port));
+        _conns.put(agent->name, agent);
+		msg_rslt rslt(RSLT_SUCSS, "success");
+		rslt.token = agent->token();
+        sock->send_msg(rslt);
 
         agent->mainloop();
     }
@@ -77,3 +81,35 @@ void GameSvr::shutdown()
     _running = false;
     // release all resource here.
 }
+
+shared_ptr<room_t> GameSvr::getroom(const string& name);
+shared_ptr<UserAgent> GameSvr::reg(shared_ptr<MsgSock> sock, const string& name);
+/* create a room, if succ, return created room pointer, if fail, throw an exception with error msg */
+shared_ptr<room_t> GameSvr::create_room(const string& player, const string& name, const string& psw);
+/*
+* player join a room, if succ, return owner name.
+* if fail, throw an exception.
+* and if join succ, svr should notice room owner.
+**/
+string GameSvr::join_room(const string& player, const string& name, const string& psw);
+/*
+ * player exit room.
+ * if fail, throw an exception.
+ * if succ, notice remain player. if no player remain, destroy room.
+ */
+void GameSvr::exit_room(shared_ptr<room_t> room, const string& name);
+/* get room list */
+int GameSvr::roomlist(vector<room_t>& rooms);
+/* change chess type */
+int GameSvr::changechess(shared_ptr<room_t> room, const string& name, u32 ct);
+/* change state */
+void GameSvr::changestate(shared_ptr<room_t> room, const string& name, u32 state);
+/*
+ * start game
+ * if succ, start a game thread.
+ * if fail, throw an exception with failed msg.
+ * failure situation:
+ *   user not room owner
+ *   player not enough or ready.
+ */
+void GameSvr::startgame(shared_ptr<room_t> room, const string& name);

@@ -22,7 +22,7 @@ set(SRC
     ${PROJECT_SOURCE_DIR}/room.cpp
     ${PROJECT_SOURCE_DIR}/user_agent.cpp
     ${PROJECT_SOURCE_DIR}/game_svr.cpp
-    ${PROJECT_SOURCE_DIR}/match_server.cpp
+    ${PROJECT_SOURCE_DIR}/match_svr.cpp
     ${PROJECT_SOURCE_DIR}/game.cpp
     ${PROJECT_SOURCE_DIR}/svr.cpp
     ${PROJECT_SOURCE_DIR}/main.cpp

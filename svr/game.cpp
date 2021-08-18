@@ -1,6 +1,7 @@
 #include "game.h"
 #include <stdexcept>
 #include <spdlog/spdlog.h>
+#include <algorithm>
 using namespace std;
 
 shared_ptr<Game> Game::_inst = nullptr;
@@ -16,6 +17,38 @@ shared_ptr<Game> Game::get()
     if(!_inst)
 	_inst = shared_ptr<Game>(new Game);
     return _inst;
+}
+
+void Game::add_player(shared_ptr<player_t> player)
+{
+	player->id = gen_id();
+	player->state = PLAYER_STATE_IDLE;
+    _players.push_back(player);
+    _pmap[player->name] = player;
+}
+
+void Game::rm_player(const string& name)
+{
+    // TODO complete this later.
+	auto it = find_if(_players.begin(), _players.end(),
+					  [&](const shared_ptr<player_t>& p){ return p->name == name; });
+	if(it != _players.end())
+		_players.erase(it);
+	_pmap.erase(name);
+}
+
+void Game::add_room(shared_ptr<Room> room)
+{
+    _rooms.push_back(room);
+    _rmap[room->_room->name] = room;
+}
+void Game::rm_room(const string& name)
+{
+	auto it = find_if(_rooms.begin(), _rooms.end(),
+					  [&](const shared_ptr<Room>& p){ return p->_room->name == name; });
+	if(it != _rooms.end())
+		_rooms.erase(it);
+	_rmap.erase(name);
 }
 
 bool Game::name_check(const string& name)
@@ -43,150 +76,143 @@ u32 Game::gen_id()
     return ++ID_GEN;
 }
 
-shared_ptr<player_t> Game::register_player(shared_ptr<player_t> player)
+
+STATUS_CODE Game::register_player(shared_ptr<player_t> player)
 {
-    name_check(player->name);
+    try{name_check(player->name);}
+	catch(exception& e)
+	{
+		spdlog::warn("error register player {}: {}", player->name, e.what());
+		return S_PLAYER_INVALID_NAME;
+	}
     lock_guard<mutex> lock(_reg_guard);
     auto exist = get_player(player->name);
 	if(exist)
-	    throw runtime_error("player name conflicts.");
-    player->id = gen_id();
-
-    // add to list and map
-    player->state = PLAYER_STATE_IDLE;
-    _players.emplace_back(player);
-    // _pmap.emplace(player->name, player);
-    _pmap[player->name] = player;
-    return player;
+	{
+		spdlog::warn("register failed, player exists: {}", player->name);
+	}
+    add_player(player);
+    return S_OK;
 }
 
-shared_ptr<room_t> Game::create_room(const string& player,
+STATUS_CODE Game::unregister_player(shared_ptr<player_t> player)
+{
+	lock_guard<mutex> lock(_reg_guard);
+	if(_pmap.count(player->name))
+	{
+		player = _pmap[player->name];
+		if(player->state != PLAYER_STATE_IDLE)
+			return S_PLAYER_BUSY;
+		rm_player(player->name);
+		return S_OK;
+	}
+	return S_PLAYER_INVALID;
+}
+
+STATUS_CODE Game::create_room(const string& player,
 					  shared_ptr<room_t> room)
 {
-    room_check(room);
-    lock_guard<mutex> lock(_room_guard);
-    // TODO check if player joined other room(state)
+    try{room_check(room);}
+	catch(exception& e)
+	{
+		spdlog::debug("error create room {} by {}: {}", room->name, player, e.what());
+		return S_ROOM_INVALID_NAME;
+	}
+
+	// TODO need lock this player?
     auto p = get_player(player);
-    if(!p) throw runtime_error("player not exists.");
+    if(!p)
+	{
+		spdlog::debug("error create room {}: player {} not exists.", room->name, player);
+		return S_PLAYER_INVALID;
+	}
     if(p->state != PLAYER_STATE_IDLE)
-        throw runtime_error("player already joined other room.");
-    for(auto p : _rooms)
-        if(p->name == room->name)
-            throw runtime_error("room name conflicts.");
-    
+	{
+		spdlog::debug("player {} already joined other room.", player);
+		return S_PLAYER_BUSY;
+	}
+	
+	lock_guard<mutex> lock(_room_guard);
+    if(_rmap.count(room->name))
+	{
+		spdlog::debug("error create room {} by {}: room already eists.", room->name, player);
+		return S_ROOM_EXISTS;
+	}
     auto nr = make_shared<Room>(room, p);
-    
-    // add to list and map
-    _rooms.emplace_back(nr);
-    // _rmap.emplace(room->name, static_pointer_cast<Room>(room));
-    _rmap[room->name] = nr;
-    return nr;
+    add_room(nr);
+    return S_OK;
 }
 
-shared_ptr<room_t> Game::join_room(const string& player, shared_ptr<room_t> room)
+STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 {
-    room_check(room);
     shared_ptr<Room> target = get_room(room->name);
     if(!target)
-        throw runtime_error("specified room not exists.");
-    
+	{
+		spdlog::debug("{} join {} failed: room not exists.", player, room->name);
+		return S_ROOM_NOT_EXISTS;
+	}
+	
     lock_guard<mutex> lock(target->_guard);
-    if(target->_guest) throw runtime_error("room full.");
-    if(room->psw != target->psw)
-        throw runtime_error("error password.");
-    auto p = get_player(player);
-    if(!p) throw runtime_error("invalid player.");
-
-    // join player to room, and set state to prepare.
-    target->state = ROOM_STATE_FULL;
-    target->_guest = p;
-    p->state = PLAYER_STATE_PREPARE;
-
-    return target;
+	auto p = get_player(player);
+	return target->join(p, room->psw);
 }
 
-void Game::exit_room(const string& player, const string& room)
+STATUS_CODE Game::exit_room(const string& player, const string& room)
 {
     auto r = get_room(room);
     auto p = get_player(player);
     if(!r)
-        throw runtime_error("specified room not exists.");
+    {
+		spdlog::debug("error {} leaving {}: room not exists");
+		return S_ROOM_NOT_EXISTS;
+	}
     lock_guard<mutex> lock(r->_guard);
-    if(!p || (p != r->_owner && p != r->_guest))
-	throw runtime_error("player not exists or not in this room.");
-
-    // if guest, just exit.
-    if(p == r->_guest)
-    {
-	p->state = PLAYER_STATE_IDLE;
-	r->_guest = nullptr;
-	r->state = ROOM_STATE_OPEN;
-	return;
-    }
-
-    // if is owner
-    // if has guest
-    if(r->_guest)
-    {
-	p->state = PLAYER_STATE_IDLE;
-	p = r->_guest;
-	r->_guest = nullptr;
-	p->state = PLAYER_STATE_OWNER;
-	r->state = ROOM_STATE_OPEN;
-	r->_owner = p;
-	return;
-    }
-    // no guest, destroy room.
-    lock_guard<mutex> lock_all(_room_guard);
-    p->state = PLAYER_STATE_IDLE;
-    erase(_rooms, r);
-    _rmap.erase(room);
+	auto ret = r->leave(p);
+	if(ret == S_ROOM_EMPTY)
+	{
+		rm_room(r->_room->name);
+		return S_OK;
+	}
+	return ret;
 }
 
 void Game::roomlist(vector<shared_ptr<room_t>>& rooms)
 {
+	lock_guard<mutex> lock(_room_guard);
     rooms.clear();
     for(auto p : _rooms)
-	rooms.emplace_back(static_pointer_cast<room_t>(p));
+		rooms.emplace_back(p->_room);
 }
 
-int Game::change_ct(const string& room,
+STATUS_CODE Game::change_ct(const string& room,
 			 const string& player, u32 ct)
 {
     auto r = get_room(room);
-    auto p = get_player(player);
+	auto p = get_player(player);
     if(!r)
-	throw runtime_error("room not exists.");
-    if(!p || p != r->_owner)
-    	throw runtime_error("player not exists or not room owner.");    
-    if(ct != CHESS_BLACK && ct != CHESS_WHITE)
-	throw runtime_error("invalid chesstype.");
-
-    lock_guard<mutex> lock(r->_guard);
-    if(ct == r->oct) return S_NOCHANGE;
-    r->oct = ct;
-    return S_OK;
+	{
+		spdlog::debug("{} change state in {} failed: room not exists.", player, room);
+		return S_ROOM_NOT_EXISTS;
+	}
+	
+	return r->change_ct(p, ct);
 }
 
-int Game::change_state(const string& room,
+STATUS_CODE Game::change_state(const string& room,
 			     const string& player, u32 state)
 {
     auto r = get_room(room);
     auto p = get_player(player);
     if(!r)
-	throw runtime_error("room not exists.");
-    if(!p || p != r->_guest)
-    	throw runtime_error("player not exists or not guest.");    
-    if(state != PLAYER_STATE_PREPARE && state != PLAYER_STATE_READY)
-	throw runtime_error("invalid state.");
-
-    lock_guard<mutex> lock(r->_guard);
-    if(state == p->state) return S_NOCHANGE;
-    p->state = state;
-    return S_OK;
+	{
+		spdlog::debug("{} change state in {} failed: room not exists.", player, room);
+		return S_ROOM_NOT_EXISTS;
+	}
+	
+	return r->change_state(p, state);
 }
 
-shared_ptr<Match> Game::start_match(const string& room, const string& player)
+STATUS_CODE Game::start_match(const string& room, const string& player)
 {
     auto r = get_room(room);
     auto p = get_player(player);
@@ -197,8 +223,9 @@ shared_ptr<Match> Game::start_match(const string& room, const string& player)
     if(!r->_guest || r->_guest->state != PLAYER_STATE_READY)
 	throw runtime_error("guest not exists or not ready.");
     lock_guard<mutex> lock(r->_guard);
-    r->state = ROOM_STATE_MATCH;
-    return make_shared<Match>(r);
+    r->_room->state = ROOM_STATE_MATCH;
+    //return make_shared<Match>(r);
+	return S_OK;
 }
 
 void Game::match_ovr(shared_ptr<Match> m)
@@ -207,7 +234,7 @@ void Game::match_ovr(shared_ptr<Match> m)
     {
 	auto r = m->room();
 	lock_guard<mutex> lock(r->_guard);
-	r->state = ROOM_STATE_FULL;
+	r->_room->state = ROOM_STATE_FULL;
 	r->_guest->state = PLAYER_STATE_PREPARE;
 
 	// TODO record stats in future.

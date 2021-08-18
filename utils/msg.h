@@ -204,61 +204,62 @@ shared_ptr<msg_move> unpack_move(const msg_raw_t& raw);
 RTTR_REGISTRATION
 {
     registration::class_<player_t>("Player")
-	.constructor<>()
-	.property("id", &player_t::id)
-	.property("name", &player_t::name)
-	.property("state", &player_t::state)
-	.property("ip", &player_t::ip)
-	.property("port", &player_t::port);
+		.constructor<>()
+		.property("id", &player_t::id)
+		.property("name", &player_t::name)
+		.property("state", &player_t::state)
+		.property("ip", &player_t::ip)
+		.property("port", &player_t::port);
     registration::class_<room_t>("Room")
-	.constructor<>()
-	.property("id", &room_t::id)
-	.property("name", &room_t::name)
-	.property("psw", &room_t::psw)
-	.property("oct", &room_t::oct)
-	.property("state", &room_t::state);
-    
+		.constructor<>()
+		.property("id", &room_t::id)
+		.property("name", &room_t::name)
+		.property("psw", &room_t::psw)
+		.property("oct", &room_t::oct)
+		.property("state", &room_t::state)
+		.property("owner", &room_t::owner)
+		.property("guest", &room_t::guest);
     registration::class_<msg_t>("Msg")
-	.constructor<>()
-	.property("msg_type", &msg_t::msg_type)
-	.property("token", &msg_t::token)
-	.property("session", &msg_t::session);
+		.constructor<>()
+		.property("msg_type", &msg_t::msg_type)
+		.property("token", &msg_t::token)
+		.property("session", &msg_t::session);
     registration::class_<msg_result>("Result")
-	.constructor<>()
-	.property("status", &msg_result::status)
-	.property("result", &msg_result::result);
+		.constructor<>()
+		.property("status", &msg_result::status)
+		.property("result", &msg_result::result);
     registration::class_<msg_request>("Request")
-	.constructor<>()
-	.property("oper", &msg_request::oper)
-	.property("target", &msg_request::target);
+		.constructor<>()
+		.property("oper", &msg_request::oper)
+		.property("target", &msg_request::target);
     registration::class_<msg_reg>("Register")
-	.constructor<>()
-	.property("name", &msg_reg::name);
+		.constructor<>()
+		.property("name", &msg_reg::name);
     registration::class_<msg_roomlist>("RoomList")
-	.constructor<>()
-	.property("rooms", &msg_roomlist::rooms);
+		.constructor<>()
+		.property("rooms", &msg_roomlist::rooms);
     registration::class_<msg_room_oper>("RoomOper")
-	.constructor<>()
-	.property("type", &msg_room_oper::type)
-	.property("room", &msg_room_oper::room);
+		.constructor<>()
+		.property("type", &msg_room_oper::type)
+		.property("room", &msg_room_oper::room);
     registration::class_<msg_room_info>("RoomInfo")
-	.constructor<>()
-	.property("type", &msg_room_info::type)
-	.property("name", &msg_room_info::name);
+		.constructor<>()
+		.property("type", &msg_room_info::type)
+		.property("name", &msg_room_info::name);
     registration::class_<msg_chess>("Chess")
-	.constructor<>()
-	.property("type", &msg_chess::type);
+		.constructor<>()
+		.property("type", &msg_chess::type);
     registration::class_<msg_state>("State")
-	.constructor<>()
-	.property("state", &msg_state::state);
+		.constructor<>()
+		.property("state", &msg_state::state);
     registration::class_<msg_game>("Game")
-	.constructor<>()
-	.property("state", &msg_game::state)
-	.property("ex", &msg_game::ex)
-	.property("message", &msg_game::message);
+		.constructor<>()
+		.property("state", &msg_game::state)
+		.property("ex", &msg_game::ex)
+		.property("message", &msg_game::message);
     registration::class_<msg_move>("Move")
-	.constructor<>()
-	.property("chess", &msg_move::chess)
-	.property("x", &msg_move::x)
-	.property("y", &msg_move::y);
+		.constructor<>()
+		.property("chess", &msg_move::chess)
+		.property("x", &msg_move::x)
+		.property("y", &msg_move::y);
 }

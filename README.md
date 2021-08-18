@@ -98,13 +98,13 @@ RUA!
 
 #### v3
 
-first there are two (type of) server, or two part of a full server. I name them `game svr` and `match svr` to distinguish them.
+first, devide server into 2 parts, I call `game svr` and `match svr`. as their name, a `game svr` handle `player` and `room` operations, like `login in` or `join/create room`. and, `match svr` handle gomoku matches.
 
 all msg between svr and client contains `token` and`session` fields.
 
 now svr only contains client registration, no user management. when a clients register to `game svr` successfully, svr return a `token` to the clients, then clients can use the `token` to communicate with svr.
 
-`token` has an expire time. when clients `logout`  or `unregister` from svr, or reached the expire time from last action, svr invalidate the token.client should register to svr again to request a new `token`. 
+`token` has an expire time. when clients `logout`  or `unregister` from svr, or reached the expire time from last action, svr invalidate the token. client should register to svr again to request a new `token`. 
 
 `session` was used to identify requests and its response. for exp, client snd a request to get exists roomlist, and svr snd a response back to client.  but before the roomlist response snd to client, there may be other same type msg snd to client. so, when client snd a request, mark it with a session id. svr will return response with same session id. then client can locate the msg needed.
 
