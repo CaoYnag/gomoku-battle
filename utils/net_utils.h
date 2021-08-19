@@ -29,6 +29,7 @@ public:
     /* resource intfs. */
     int init();
     void close();
+	inline bool closed() { return _sock > 0; }
     inline string ip() {return _ip;}
     inline int port(){return _port;}
     inline SOCK sock(){return _sock;}

@@ -1,56 +1,68 @@
-#include "game.h"
-#include "server.h"
+#include "game_svr.h"
 
+// these state only use for UserAgent
 constexpr const u32 USER_STATE_IDLE = 0;    // reged to svr, but did nothing
 constexpr const u32 USER_STATE_ROOM = 1;    // created/joined a room
 constexpr const u32 USER_STATE_GAME = 2;    // started a match
 constexpr const u32 USER_STATE_ERR  = 0x8000;   // err/exited
 
-UserAgent::UserAgent(shared_ptr<MsgSock> sock, u32 id, const string& name, u64 token)
-    : player_t(id, name, 0, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE), _token(token)
+UserAgent::UserAgent(shared_ptr<MsgSock> sock, const string& name)
+    : player_t(INVALID_ID, name, 0, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE), _token(INVALID_TOKEN)
 {}
 
 UserAgent::~UserAgent()
 {}
 
-int UserAgent::fail(u32 code, const string& msg)
+int UserAgent::rslt(u32 code, const string& msg)
 {
-    _sock->rslt(RSLT_FAIL, "invalid request.");
-    if(_sock->fail())
+    _sock->rslt(code, msg);
+    if(code == S_ILLEGAL_OPER && _sock->fail())
     {
         // release resource here
         throw runtime_error("reach error limits.");
     }
     return 0;
 }
-
+	
 void UserAgent::mainloop()
 {
     shared_ptr<msg_t> msg = _sock->rcv_msg();
 
-    while(_state != USER_STATE_ERR)
-    {
-        shared_ptr<msg_t> msg = _sock->rcv_msg();
-        if(msg)
-        {
-            switch (_state)
-            {
-            case USER_STATE_IDLE: idle(msg);break;
-            case USER_STATE_ROOM: room(msg);break;
-            case USER_STATE_GAME: game(msg);break;
-            
-            default:
-                break;
-            }
-        }
-        else fail(RSLT_FAIL, "invalid msg.");
-    }
-
+	try
+	{
+		while(_state != USER_STATE_ERR)
+		{
+			shared_ptr<msg_t> msg = _sock->rcv_msg();
+			if(msg)
+			{
+				_sock->session(msg->session); // change session here.
+				switch (_state)
+				{
+				case USER_STATE_IDLE: idle(msg);break;
+				case USER_STATE_ROOM: room(msg);break;
+				case USER_STATE_GAME: game(msg);break;
+					
+				default:
+					break;
+				}
+			}
+			else
+			{
+				_sock->session(); // invalidate session.
+				rslt(S_INVALID_MSG);
+			}
+		}
+    } catch(exception& e)
+	{
+		// reach limit
+		// keep last session.
+		_sock->rslt(S_ILLEGAL_OPER_LIMITS); // do not use rslt().
+	}
 }
 
 int UserAgent::idle(shared_ptr<msg_t> msg)
 {
-    auto svr = Server::get();
+	auto svr = GameSvr::get();
     switch (msg->msg_type)
     {
     case MSG_T_REQUEST:
@@ -62,39 +74,33 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
             svr->roomlist(rooms);
             _sock->roomlist(rooms);
         }
-        else fail(RSLT_FAIL, "invalid request target.");
+        else rslt(S_ILLEGAL_MSG);
     }break;
     case MSG_T_ROOM_OPER:
     {
         auto oper = static_pointer_cast<msg_room_oper>(msg);
         if(oper->type == ROOM_OPER_CREATE)
         {
-            try
-            {
-                auto room = svr->create_room(name, oper->room.name, oper->room.psw);
-                _sock->rslt(RSLT_SUCSS, "success.");
-                _state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
-		_room = room;
-            } catch(exception& e)
-            {
-                fail(RSLT_FAIL, e.what());
-            }
+			auto s = svr->create_room(name, oper->room);
+			if(!s)
+			{
+				_state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
+				_room = game->get_room(oper->room->name);
+			}
+			rslt(s);
         }
         else if(oper->type == ROOM_OPER_JOIN)
         {
-            try
-            {
-                auto owner = svr->join_room(name, oper->room.name, oper->room.psw);
-                _sock->roominfo(ROOM_INFO_OWNER, owner);
-                _state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
-		_room = svr->getroom(oper->room.name);
-            } catch(exception& e)
-            {
-                fail(RSLT_FAIL, e.what());
-            }
-            
+			auto s = svr->join_room(name, oper->room);
+			if(!s)
+			{
+				_state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
+				_room = svr->get_room(oper->room.name);
+				_sock->roominfo(RI_PLAYER_JOIN, _room);
+				// TODO notice owner
+			} else rslt(s);
         }
-        else fail(RSLT_FAIL, "invalid room operation.");
+        else rslt(S_ILLEGAL_OPER);
     }break;
     default:
         break;
@@ -104,58 +110,57 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
 
 int UserAgent::room(shared_ptr<msg_t> msg)
 {
-    auto svr = Server::get();
+	auto svr = GameSvr::get();
+	
     switch (msg->msg_type)
     {
     case MSG_T_CHESS:
     {
         // change chess type
-	auto ct = static_pointer_cast<msg_chess>(msg);
-	svr->changechess(_room, name, ct->type);
+		auto ct = static_pointer_cast<msg_chess>(msg);
+		auto s = svr->change_ct(_room, name, ct->type);
+		rslt(s);
+		// TODO notice guest here if success
     }break;
     case MSG_T_STATE:
     {
-	// change state
-	auto sm = static_pointer_cast<msg_state>(msg);
-	try
-	{
-	    svr->changestate(_room, name, sm->state);
-	} catch(exception& e)
-	{
-	    fail(RSLT_FAIL, e.what());
-	}
+		// change state
+		auto sm = static_pointer_cast<msg_state>(msg);
+		auto s = svr->change_state(_room, name, sm->state);
+		rslt(s);
+		// TODO notice owner here
     }break;
     case MSG_T_ROOM_OPER:
     {
-	// only exit here now.
-	auto oper = static_pointer_cast<msg_room_oper>(msg);
-	if(oper->type == ROOM_OPER_EXIT)
-	{
-	    try
-	    {
-		svr->exit_room(_room, name);
-		// if succ exit room, back to idle state
-		_state = USER_STATE_IDLE;
-	    } catch(exception& e)
-	    {
-		fail(RSLT_FAIL, "operation failed.");
-	    }
-	}
+		// only exit here now.
+		auto oper = static_pointer_cast<msg_room_oper>(msg);
+		if(oper->type == ROOM_OPER_EXIT)
+		{
+			auto s = svr->exit_room(name, _room);
+
+			if(!s)
+			{
+				// if succ exit room, back to idle state
+				_state = USER_STATE_IDLE;
+			}
+			rslt(s);
+		}
+		else rslt(S_ILLEGAL_OPER); // only exit is legal
     }break;
     case MSG_T_REQUEST:
     {
-	// only `start` request now.
-	auto req = static_pointer_cast<msg_request>(msg);
-	if(req->oper == REQ_GAME_START)
-	{
-	    try
-	    {
-		svr->startgame(_room, name);
-	    } catch(exception& e)
-	    {
-		fail(RSLT_FAIL, e.what());
-	    }
-	}
+		// only `start` request now.
+		auto req = static_pointer_cast<msg_request>(msg);
+		if(req->oper == REQ_GAME_START)
+		{
+			auto s = svr->start_match(_room, name);
+			if(!s)
+			{
+				// success, enter game state
+				_state = USER_STATE_GAME;
+			}
+			rslt(s);
+		} else rslt(S_ILLEGAL_OPER);
     }break;
     default:
         break;
@@ -164,14 +169,14 @@ int UserAgent::room(shared_ptr<msg_t> msg)
 }
 int UserAgent::game(shared_ptr<msg_t> msg)
 {
-    auto svr = Server::get();
+    auto svr = GameSvr::get();
     switch (msg->msg_type)
     {
     case MSG_T_MOVE:
     {
         // change chess type
-	auto ct = static_pointer_cast<msg_chess>(msg);
-	svr->changechess(_room, name, ct->type);
+		auto ct = static_pointer_cast<msg_chess>(msg);
+		svr->changechess(_room, name, ct->type);
     }break;
     // drop other msg.
     }
@@ -221,7 +226,7 @@ shared_ptr<msg_t> UserAgent::next_oper()
 
 /*====================Room====================*/
 Room::Room(u32 i, const string& n, const string& p, u32 s,
-	   shared_ptr<UserAgent> owner)
+		   shared_ptr<UserAgent> owner)
     : room_t(i, n, p, s), _owner(owner), _owner_chess(CHESS_WHITE)
 {}
 
@@ -234,7 +239,7 @@ string Room::join(shared_ptr<UserAgent> user, const string& psw)
 {
     // TODO need a lock here
     if(user == _owner || user == _guest)
-	return "already in room";
+		return "already in room";
     if(_guest) return "room full";
     if(psw != this->psw) return "wrong psw";
     _guest = user;
@@ -245,19 +250,19 @@ u32 Room::leave(shared_ptr<UserAgent> user)
 {
     if(user == _guest)
     {
-	_guest = nullptr;
-	return 1;
+		_guest = nullptr;
+		return 1;
     }
     if(user == _owner)
     {
-	if(_guest)
-	{
-	    _owner = _guest;
-	    _guest = nullptr;
-	    // so now, the new owner use another chess type.
-	    return 1;
-	}
-	else return 0;
+		if(_guest)
+		{
+			_owner = _guest;
+			_guest = nullptr;
+			// so now, the new owner use another chess type.
+			return 1;
+		}
+		else return 0;
     }
     // just return 1 to avoid room destroy
     return 1;

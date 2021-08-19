@@ -8,29 +8,22 @@ protected:
     u32 _state;
     u32 _type;
     u32 _chesstype;
-    u64 _token;
+    u64 _toekn;
     shared_ptr<room_t> _room;
 protected:
-	/* states */
     int idle(shared_ptr<msg_t> msg);
     int room(shared_ptr<msg_t> msg);
     int game(shared_ptr<msg_t> msg);
-	
-    int rslt(u32 code, const string& msg = "");
+
+    int fail(u32 code, const string& msg);
 public:
-	UserAgent(shared_ptr<MsgSock> sock, const string& name);
+UserAgent(shared_ptr<MsgSock> sock, u32 id, const string& name, u64 token);
     virtual ~UserAgent();
 
-    /* 
-	 * main loop
-	 * handle msgs
-	 * util close conn 
-	 */
+    /* main loop, util close conn */
     void mainloop();
 
     inline u64 token() { return _token; }
-	inline void token(u64 t) { _token = t; }
-	inline shared_ptr<MsgSock> sock() { return _sock; }
 public:
     /* some callbacks */
     /* set player chess type */

@@ -10,6 +10,7 @@ public:
     int _state;
 
     Gomoku();
+	Gomoku(const Gomoku&) = delete;
     virtual ~Gomoku();
 protected:
     void check(int x, int y);

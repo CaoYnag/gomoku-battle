@@ -25,17 +25,17 @@ void info(msg_roomlist msg)
 	cout << "roomlist: " << msg.rooms.size() << "\n";
 	for(auto& room : msg.rooms)
 	{
-		cout << room .id << " " << room .name << " " << room .psw << " " << room .state << endl;
+		cout << room .id << " " << room .name << " " << room .psw << " " << room.state << endl;
 	}
 }
 void info(msg_room_oper msg)
 {
-	cout << "oper: " << (int)msg.type << " " << msg.room .name << " " << msg.room .psw << endl;
+	cout << "oper: " << (int)msg.type << " " << msg.room.name << " " << msg.room.psw << endl;
 }
-void info(msg_room_info msg)
+/*void info(msg_room_info msg)
 {
 	cout << "info: " << (int)msg.type << " " << msg.name << endl;
-}
+	}*/
 void info(msg_chess msg)
 {
 	cout << "chess: " << (int)msg.type << endl;
@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 {
 	{
 		vector<room_t> rooms;
-		rooms.push_back(room_t(0, "room", "psw", 0, 0));
-		rooms.push_back(room_t(1, "room2", "psw3", 1, 0));
-		rooms.push_back(room_t(2, "aaaa", "xxxxx", 3, 0));
+		rooms.push_back(room_t(0, "room", "psw"));
+		rooms.push_back(room_t(1, "room2", "psw3"));
+		rooms.push_back(room_t(2, "aaaa", "xxxxx"));
 
 		msg_roomlist msg(rooms);
 		auto j = serialize(msg);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 BOOST_AUTO_TEST_CASE(test_msg_room_oper)
 {
 	{
-	    msg_room_oper msg(0, room_t(0, "name", "psw", 0, 0));
+	    msg_room_oper msg(0, room_t(0, "name", "psw"));
 		auto j = serialize(msg);
 		msg_room_oper rslt;
 		deserialize(j, rslt);
@@ -135,6 +135,7 @@ BOOST_AUTO_TEST_CASE(test_msg_room_oper)
 	}
 }
 
+/*
 BOOST_AUTO_TEST_CASE(test_msg_room_info)
 {
 	{
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_msg_room_info)
 		BOOST_REQUIRE_EQUAL(msg.name, rslt.name);
 	}
 }
-
+*/
 BOOST_AUTO_TEST_CASE(test_msg_chess)
 {
 	{

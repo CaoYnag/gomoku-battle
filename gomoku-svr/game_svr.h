@@ -1,78 +1,64 @@
 #pragma once
-#include <boost/thread.hpp>
+#include <atomic>
 #include <map>
 #include <vector>
 #include "../utils/msg_sock.h"
-#include "game.h"
+#include "../svr/game.h"
+#include "user_agent.h"
 using namespace std;
 
 /**
-* GameSvr only contains intfs communicated with clients.
-* All game logic implemented in Game.
+GameSvr only contains intfs communicated with clients.
+All game logic implemented in Game.
+
+when rcv a new connection, game svr try rcv a `reg msg.
+when rcv the reg msg, svr generate a token for it, or find associated user_agent..
+
+this token will used for reconnection in future.
+
+each msg snd to svr should bring a `session` field, then svr reply clients will set same session.
+clients can use session field to identify different response for his requests.
 */
 class GameSvr
 {
 protected:
-shared_ptr<MsgSock> _svr;
-int _conn;
-map<string, shared_ptr<UserAgent>> _conns;
-boost::atomic<int> _running;
+	shared_ptr<Game> _game;
+	shared_ptr<MsgSock> _svr;
+	int _conn;
+	map<string, shared_ptr<UserAgent>> _conns; // player name : connection
+	map<u64, string> _tokens; // token : player name
+	atomic<int> _running;
 public:
-virtual ~GameSvr();
+	virtual ~GameSvr();
 
-int init();
-void service();
-void shutdown();
+	int init();
+	void service();
+	void shutdown();
+protected:
+	STATUS_CODE reg(shared_ptr<MsgSock> sock, shared_ptr<msg_reg> msg);
+	void release_conn(shared_ptr<MsgSock> sock);
 
-void release_conn(shared_ptr<MsgSock> sock);
+	/* handle new connection */
+	void handle_new_conn(shared_ptr<MsgSock> sock);
 
-/* handle registration */
-void handle_reg(shared_ptr<MsgSock> sock);
-
-/* some data intf */
-shared_ptr<room_t> getroom(const string& name);
-public:
-/* some management intf */
-
-/*
-* register player, if succ, generate id, add to players, return a useragent,
-* if fail, throw an exception.
-* NEVER return an empty pointer.
-**/
-shared_ptr<UserAgent> reg(shared_ptr<MsgSock> sock, const string& name);
-/* create a room, if succ, return created room pointer, if fail, throw an exception with error msg */
-shared_ptr<room_t> create_room(const string& player, const string& name, const string& psw);
-/*
-* player join a room, if succ, return owner name.
-* if fail, throw an exception.
-* and if join succ, svr should notice room owner.
-**/
-string join_room(const string& player, const string& name, const string& psw);
-/*
-* player exit room.
-* if fail, throw an exception.
-* if succ, notice remain player. if no player remain, destroy room.
-*/
-void exit_room(shared_ptr<room_t> room, const string& name);
-/* get room list */
-int roomlist(vector<room_t>& rooms);
-/* change chess type */
-int changechess(shared_ptr<room_t> room, const string& name, u32 ct);
-/* change state */
-void changestate(shared_ptr<room_t> room, const string& name, u32 state);
-/*
-* start game
-* if succ, start a game thread.
-* if fail, throw an exception with failed msg.
-* failure situation:
-*   user not room owner
-*   player not enough or ready.
-*/
-void startgame(shared_ptr<room_t> room, const string& name);
+	inline shared_ptr<UserAgent> get_agent(const string& name) { return _conns[name]; }
 private:
-GameSvr();
-GameSvr(const GameSvr&) = delete;
-static shared_ptr<GameSvr> _inst;
+	GameSvr();
+	GameSvr(const GameSvr&) = delete;
+	static shared_ptr<GameSvr> _inst;
 public:
-static shared_ptr<GameSvr> Get();
+	static shared_ptr<GameSvr> get();
+
+
+public:
+	/* game intfs */
+	STATUS_CODE register_player(shared_ptr<player_t> player);
+	STATUS_CODE unregister_player(shared_ptr<player_t> player);
+    STATUS_CODE create_room(const string& player, shared_ptr<room_t> room);
+    STATUS_CODE join_room(const string& player, shared_ptr<room_t> room);
+    STATUS_CODE exit_room(const string& player, const string& room);
+    void roomlist(vector<room_t>&);
+    STATUS_CODE change_ct(const string& room, const string& player, u32 ct);
+    STATUS_CODE change_state(const string& room, const string& player, u32 state);
+    STATUS_CODE start_match(const string& room, const string& player);
 };

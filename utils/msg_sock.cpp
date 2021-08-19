@@ -78,35 +78,35 @@ shared_ptr<msg_t> MsgSock::rcv_msg()
     switch (t)
     {
     case MSG_T_RESULT:
-    ret = unpack_result(msg_str);
-    break;
+		ret = unpack_result(msg_str);
+		break;
     case MSG_T_REQUEST:
-    ret = unpack_request(msg_str);
-	break;
+		ret = unpack_request(msg_str);
+		break;
     case MSG_T_REGISTER:
-    ret = unpack_reg(msg_str);
-	break;
+		ret = unpack_reg(msg_str);
+		break;
     case MSG_T_ROOM_LIST:
-    ret = unpack_roomlist(msg_str);
-	break;
+		ret = unpack_roomlist(msg_str);
+		break;
     case MSG_T_ROOM_OPER:
-    ret = unpack_roomoper(msg_str);
-	break;
+		ret = unpack_roomoper(msg_str);
+		break;
     case MSG_T_ROOM_INFO:
-    ret = unpack_roominfo(msg_str);
-	break;
+		ret = unpack_roominfo(msg_str);
+		break;
     case MSG_T_CHESS:
-    ret = unpack_chess(msg_str);
-	break;
+		ret = unpack_chess(msg_str);
+		break;
     case MSG_T_STATE:
-    ret = unpack_state(msg_str);
-	break;
+		ret = unpack_state(msg_str);
+		break;
     case MSG_T_GAME:
-    ret = unpack_game(msg_str);
-	break;
+		ret = unpack_game(msg_str);
+		break;
     case MSG_T_MOVE:
-    ret = unpack_move(msg_str);
-	break;
+		ret = unpack_move(msg_str);
+		break;
     case MSG_T_UNKNOWN:
     default:
         break;
@@ -144,7 +144,7 @@ int MsgSock::room_oper(u32 type, const room_t& room)
     return send_msg(msg_room_oper(type, room));
 }
 
- // create/join/exit
+// create/join/exit
 int MsgSock::create_room(const string& name, const string& psw)
 {
     return send_msg(msg_room_oper(ROOM_OPER_CREATE, room_t(name, psw)));

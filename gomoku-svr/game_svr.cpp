@@ -15,7 +15,9 @@ shared_ptr<GameSvr> GameSvr::get()
 }
 
 GameSvr::GameSvr() : _running(0)
-{}
+{
+	_game = make_shared<Game>();
+}
 GameSvr::~GameSvr()
 {
     _svr->close();
@@ -34,11 +36,32 @@ void GameSvr::service()
     while(_running)
     {
         auto cli = _svr->accept_msg_sock();
-        boost::thread(boost::bind(&GameSvr::handle_reg, this, cli)).detach();
+        boost::thread(boost::bind(&GameSvr::handle_new_conn, this, cli)).detach();
     }
 }
 
-void GameSvr::handle_reg(shared_ptr<MsgSock> sock)
+STATUS_CODE GameSvr::reg(shared_ptr<MsgSock> sock, shared_ptr<msg_reg> msg)
+{
+	// just accept as a new player.
+	// TODO token check and reconnection should be implemented in future.
+
+	auto agent = make_shared<UserAgent>(sock, msg->name);
+	auto s = _game->register_player(static_pointer_cast<player_t>(agent));
+
+	if(s == S_OK)
+	{
+		// success register
+		// generate token, create agent and put into map
+		agent->token(generate_token(sock-ip().c_str(), sock->port()));
+		sock->token(agent->token());
+		_tokens[agent->token()] = agent->name;
+		_conns[agent->name] = agent;
+	}
+	
+	return s;
+}
+
+void GameSvr::handle_new_conn(shared_ptr<MsgSock> sock)
 {
     auto msg = sock->rcv_msg();
     while(!msg || msg->msg_type != MSG_T_REGISTER)
@@ -53,27 +76,24 @@ void GameSvr::handle_reg(shared_ptr<MsgSock> sock)
         release_conn(sock);
         return;
     }
-    auto reg_msg = static_pointer_cast<msg_reg>(msg);
-    try
-    {
-        // generate token, add put it in conns
-        auto agent = reg(sock, reg_msg->name, generate_token(sock->ip().c_str(), sock->port));
-        _conns.put(agent->name, agent);
-		msg_rslt rslt(RSLT_SUCSS, "success");
-		rslt.token = agent->token();
-        sock->send_msg(rslt);
+    auto rmsg = static_pointer_cast<msg_reg>(msg);
 
-        agent->mainloop();
-    }
-    catch(const std::exception& e)
-    {
-        // reg fail.
-        sock->rslt(RSLT_FAIL, e.what());
-    }
-}
+	auto s = reg(sock, rmsg);
+	msg_result rslt(s);
+	rslt.session = msg.session;
+	if(!s) rslt.token = get_agent(rmsg->name)->token();
+	sock->send_msg(rslt);
+	
+	if(!s)
+	{
+		auto agent = _conns[rmsg->name];
+		agent->mainloop();
+	}
+ }
 void GameSvr::release_conn(shared_ptr<MsgSock> sock)
 {
     // TODO close conn, clear conns, failures and others
+	sock->close();
 }
 
 void GameSvr::shutdown()
@@ -82,34 +102,72 @@ void GameSvr::shutdown()
     // release all resource here.
 }
 
-shared_ptr<room_t> GameSvr::getroom(const string& name);
-shared_ptr<UserAgent> GameSvr::reg(shared_ptr<MsgSock> sock, const string& name);
-/* create a room, if succ, return created room pointer, if fail, throw an exception with error msg */
-shared_ptr<room_t> GameSvr::create_room(const string& player, const string& name, const string& psw);
-/*
-* player join a room, if succ, return owner name.
-* if fail, throw an exception.
-* and if join succ, svr should notice room owner.
-**/
-string GameSvr::join_room(const string& player, const string& name, const string& psw);
-/*
- * player exit room.
- * if fail, throw an exception.
- * if succ, notice remain player. if no player remain, destroy room.
- */
-void GameSvr::exit_room(shared_ptr<room_t> room, const string& name);
-/* get room list */
-int GameSvr::roomlist(vector<room_t>& rooms);
-/* change chess type */
-int GameSvr::changechess(shared_ptr<room_t> room, const string& name, u32 ct);
-/* change state */
-void GameSvr::changestate(shared_ptr<room_t> room, const string& name, u32 state);
-/*
- * start game
- * if succ, start a game thread.
- * if fail, throw an exception with failed msg.
- * failure situation:
- *   user not room owner
- *   player not enough or ready.
- */
-void GameSvr::startgame(shared_ptr<room_t> room, const string& name);
+STATUS_CODE GameSvr::register_player(shared_ptr<player_t> player)
+{
+	return _game->resiger_player(player);
+}
+STATUS_CODE GameSvr::unregister_player(shared_ptr<player_t> player)
+{
+	return _game->unregister_player(player);
+}
+STATUS_CODE GameSvr::create_room(const string& player, shared_ptr<room_t> room)
+{
+	return _game->create_room(player, room);
+}
+STATUS_CODE GameSvr::join_room(const string& player, shared_ptr<room_t> room)
+{
+	auto s = _game->join_room(player, room);
+	if(s == S_OK)
+	{
+		// notice owner here
+		room = _game->get_room(room->name);
+		get_agent(room->owner)->sock()->room_oper(RI_PLAYER_JOIN, room);
+	}
+	return s;
+}
+STATUS_CODE GameSvr::exit_room(const string& player, const string& room)
+{
+	auto s = _game->exit_room(player, room);
+	if(s == S_OK)
+	{
+		auto r = _game->get_room(room);
+		if(r && r->owner != player)
+			get_agent(r->owner)->sock()->room_oper(RI_PLAYER_EXIT, r);
+	}
+	return s;
+}
+void GameSvr::roomlist(vector<room_t>& rooms)
+{
+	_game->roomlist(rooms);
+}
+STATUS_CODE GameSvr::change_ct(const string& room, const string& player, u32 ct)
+{
+	auto s = _game->change_ct(room, player, ct);
+	if(s == S_OK)
+	{
+		// NOTICE guest
+		auto r = get_room(room);
+		get_agent(r->guest)->sock()->room_oper(RI_PLAYER_CHESS, r);
+	}
+	return s;
+}
+STATUS_CODE GameSvr::change_state(const string& room, const string& player, u32 state)
+{
+	auto s = _game->change_state(room, player, state);
+	if(s == S_OK)
+	{
+		auto r = get_room(room);
+		get_agent(r->owner)->sock()->room_oper(RI_PLAYER_STATE, r);
+	}
+	return s;
+}
+STATUS_CODE GameSvr::start_match(const string& room, const string& player)
+{
+	auto s = _game->start_match(room, player);
+	if(s == S_OK)
+	{
+		// TODO how to notice another player?
+	}
+	return s;
+}
+

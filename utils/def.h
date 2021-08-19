@@ -20,24 +20,18 @@ typedef double f64;
 
 typedef u32 STATUS_CODE;
 
-/* some return value */
-constexpr const int S_OK = 0x0;
-constexpr const int S_NOCHANGE = 0x1;
-
 
 constexpr const int BOARD_SIZE = 15;
 constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
 
-constexpr const u32 ID_INVALID = -1;
+constexpr const u32 INVALID_ID 			= -1;
+constexpr const u64 INVALID_TOKEN 		= -1;
+constexpr const u64 INVALID_SESSION 	= -1;
 
 constexpr const u32 CHESS_BLANK       = 0x0;
 constexpr const u32 CHESS_BLACK       = 0x1;
 constexpr const u32 CHESS_WHITE       = 0x10;
 constexpr const u32 CHESS_SUM         = CHESS_BLACK + CHESS_WHITE;
-
-constexpr const u32 RSLT_SUCSS          = 0x0;
-constexpr const u32 RSLT_FAIL           = 0x1;
-constexpr const u32 RSLT_NEED_REGISTER  = 0x2;
 
 constexpr const u32 REQ_ROOM_LIST       = 0x1;
 constexpr const u32 REQ_GAME_START      = 0x2;
@@ -77,27 +71,37 @@ constexpr const u32 GAME_RSLT_DRAW     = 0x3;
 constexpr const u32 GAME_RSLT_ERROR    = 0x4;
 
 /* =============== some result code =============== */
-// 1. player
-constexpr const STATUS_CODE S_PLAYER_INVALID_META 	= 0x1; // reg
-constexpr const STATUS_CODE S_PLAYER_EXISTS 		= 0x2; // reg
-constexpr const STATUS_CODE S_PLAYER_INVALID 		= 0x3; // any other opers, like join room
-constexpr const STATUS_CODE S_PLAYER_BUSY			= 0x4; // unregister, join room
+// 1. common
+/* some return value */
+constexpr const STATUS_CODE S_OK 					= 0x0; // success, no error
+constexpr const STATUS_CODE S_NOCHANGE 				= 0x1; // no change.
+constexpr const STATUS_CODE S_ERROR					= 0x2; // error, should describe detail in a text field
+constexpr const STATUS_CODE S_ILLEGAL_OPER_LIMITS	= 0x3; // reach illegal oper limits
+constexpr const STATUS_CODE S_INVALID_MSG			= 0x4; // invalid msg. unknown msg type, or cannot unpack
+constexpr const STATUS_CODE S_ILLEGAL_MSG			= 0x5; // illegal msg. wrong msg parameters
+constexpr const STATUS_CODE S_ILLEGAL_OPER			= 0x6; // illegal operations.
+
+// 2. player
+constexpr const STATUS_CODE S_PLAYER_INVALID_META 	= 0x101; // reg
+constexpr const STATUS_CODE S_PLAYER_EXISTS 		= 0x102; // reg
+constexpr const STATUS_CODE S_PLAYER_INVALID 		= 0x103; // any other opers, like join room
+constexpr const STATUS_CODE S_PLAYER_BUSY			= 0x104; // unregister, join room
 // maybe some token status here in future.
 
-// 2. room
-constexpr const STATUS_CODE S_ROOM_INVALID_META 	= 0x11; // create room
-constexpr const STATUS_CODE S_ROOM_EXISTS 			= 0x12; // create room
-constexpr const STATUS_CODE S_ROOM_NOT_EXISTS 		= 0x13; // join/exit room
-constexpr const STATUS_CODE S_ROOM_FULL 			= 0x14; // join room
-constexpr const STATUS_CODE S_ROOM_ILLEGAL_ACCESS	= 0x15; // join room
-constexpr const STATUS_CODE S_ROOM_ALREADY_INSIDE	= 0x16; // join room
-constexpr const STATUS_CODE S_ROOM_ILLEGAL_OPER 	= 0x17; // exit room, change ct/state
-constexpr const STATUS_CODE S_ROOM_EMPTY			= 0x19; // exit room. need destroy room.
+// 3. room
+constexpr const STATUS_CODE S_ROOM_INVALID_META 	= 0x201; // create room
+constexpr const STATUS_CODE S_ROOM_EXISTS 			= 0x202; // create room
+constexpr const STATUS_CODE S_ROOM_NOT_EXISTS 		= 0x203; // join/exit room
+constexpr const STATUS_CODE S_ROOM_FULL 			= 0x204; // join room
+constexpr const STATUS_CODE S_ROOM_ILLEGAL_ACCESS	= 0x205; // join room
+constexpr const STATUS_CODE S_ROOM_ALREADY_INSIDE	= 0x206; // join room
+constexpr const STATUS_CODE S_ROOM_ILLEGAL_OPER 	= 0x207; // exit room, change ct/state
+constexpr const STATUS_CODE S_ROOM_EMPTY			= 0x208; // exit room. need destroy room.
 
-// 3. game
-constexpr const STATUS_CODE S_GAME_NO_GUEST 		= 0x21; // start game
-constexpr const STATUS_CODE S_GAME_ILLEGAL_OPER 	= 0x22; // guest start game
-constexpr const STATUS_CODE S_GAME_NOT_PREPARE 		= 0x23; // guest not prepared
+// 4. game
+constexpr const STATUS_CODE S_GAME_NO_GUEST 		= 0x301; // start game
+constexpr const STATUS_CODE S_GAME_ILLEGAL_OPER 	= 0x302; // guest start game
+constexpr const STATUS_CODE S_GAME_NOT_PREPARE 		= 0x303; // guest not prepared
 
 string str_status_code(STATUS_CODE code);
 
@@ -120,6 +124,7 @@ struct room_t
     string name;
     string psw;
     u32 oct;
+	u32 gs; // guest state
     u32 state;
 	string owner;
 	string guest;
@@ -127,6 +132,6 @@ struct room_t
     room_t();
 	room_t(const string& name);
     room_t(const string& name, const string& psw);
-    room_t(u32 i, const string& n, const string& p, u32 oct, u32 s);
+    room_t(u32 i, const string& n, const string& p);
     room_t(const room_t& room);
 };

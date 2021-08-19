@@ -18,7 +18,7 @@ using std::vector;
 
 BOOST_AUTO_TEST_CASE(test_game)
 {
-	auto game = Game::get();
+	auto game = make_shared<Game>();
 
     // Register
 	BOOST_REQUIRE_EQUAL(S_PLAYER_INVALID_META, game->register_player(make_shared<player_t>("")));

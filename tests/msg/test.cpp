@@ -34,10 +34,10 @@ void info(msg_room_oper msg)
 {
     cout << "oper: " << (int)msg.type << " " << msg.room.name << " " << msg.room.psw << endl;
 }
-void info(msg_room_info msg)
-{
-    cout << "info: " << (int)msg.type << " " << msg.name << endl;
-}
+//void info(msg_room_info msg)
+//{
+//    cout << "info: " << (int)msg.type << " " << msg.name << endl;
+//}
 void info(msg_chess msg)
 {
     cout << "chess: " << (int)msg.type << endl;
@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 {
     {
 	vector<room_t> rooms;
-	rooms.push_back(room_t(0, "room", "psw", 0, 0));
-	rooms.push_back(room_t(1, "room2", "psw3", 1, 0));
-	rooms.push_back(room_t(2, "aaaa", "xxxxx", 3, 0));
+	rooms.push_back(room_t(0, "room", "psw"));
+	rooms.push_back(room_t(1, "room2", "psw3"));
+	rooms.push_back(room_t(2, "aaaa", "xxxxx"));
 	
 	msg_roomlist msg(rooms);
 	auto raw = pack(msg);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
 BOOST_AUTO_TEST_CASE(test_msg_room_oper)
 {
     {
-	msg_room_oper msg(0, room_t(0, "name", "psw", 0, 0));
+	msg_room_oper msg(0, room_t(0, "name", "psw"));
 	auto raw = pack(msg);
 	auto rslt = unpack_roomoper(raw);
 	info(raw);
@@ -171,18 +171,18 @@ BOOST_AUTO_TEST_CASE(test_msg_room_oper)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_msg_room_info)
-{
-    {
-	msg_room_info msg(0, "name");
-	auto raw = pack(msg);
-	auto rslt = unpack_roominfo(raw);
-	info(raw);
-	info(*rslt);
-	BOOST_REQUIRE_EQUAL(msg.type, rslt->type);
-	BOOST_REQUIRE_EQUAL(msg.name, rslt->name);
-    }
-}
+//BOOST_AUTO_TEST_CASE(test_msg_room_info)
+//{
+//    {
+//	msg_room_info msg(0, "name");
+//	auto raw = pack(msg);
+//	auto rslt = unpack_roominfo(raw);
+//	info(raw);
+//	info(*rslt);
+//	BOOST_REQUIRE_EQUAL(msg.type, rslt->type);
+//	BOOST_REQUIRE_EQUAL(msg.name, rslt->name);
+//    }
+//}
 
 BOOST_AUTO_TEST_CASE(test_msg_chess)
 {

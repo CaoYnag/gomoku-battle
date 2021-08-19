@@ -34,10 +34,10 @@ STATUS_CODE Room::join(shared_ptr<player_t> user, const string& psw)
 STATUS_CODE Room::leave(shared_ptr<player_t> user)
 {
 	lock_guard<mutex> lock(_guard);
-
     if(user == _guest)
     {
 		user->state = PLAYER_STATE_IDLE; // recover to default state
+		_room->gs = PLAYER_STATE_PREPARE;
 		_guest = nullptr;
 		_room->guest = "";
 		_room->state = ROOM_STATE_OPEN;
@@ -46,6 +46,7 @@ STATUS_CODE Room::leave(shared_ptr<player_t> user)
     if(user == _owner)
     {
 		user->state = PLAYER_STATE_IDLE; // recover to default state
+		_room->gs = PLAYER_STATE_PREPARE;
 		if(_guest)
 		{
 			_owner = _guest;
@@ -75,5 +76,6 @@ STATUS_CODE Room::change_state(shared_ptr<player_t> user, u32 state)
 	if(state != PLAYER_STATE_PREPARE && state != PLAYER_STATE_READY)
 		return S_ROOM_ILLEGAL_OPER;
 	user->state = state;
+	_room->gs = state;
 	return S_OK;
 }

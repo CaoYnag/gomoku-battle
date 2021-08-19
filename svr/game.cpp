@@ -4,20 +4,11 @@
 #include <algorithm>
 using namespace std;
 
-shared_ptr<Game> Game::_inst = nullptr;
-
 Game::Game()
 {}
 
 Game::~Game()
 {}
-
-shared_ptr<Game> Game::get()
-{
-    if(!_inst)
-	_inst = shared_ptr<Game>(new Game);
-    return _inst;
-}
 
 void Game::add_player(shared_ptr<player_t> player)
 {
@@ -191,12 +182,12 @@ STATUS_CODE Game::exit_room(const string& player, const string& room)
 	return ret;
 }
 
-void Game::roomlist(vector<shared_ptr<room_t>>& rooms)
+void Game::roomlist(vector<room_t>& rooms)
 {
 	lock_guard<mutex> lock(_room_guard);
     rooms.clear();
     for(auto p : _rooms)
-		rooms.emplace_back(p->_room);
+		rooms.emplace_back(*(p->_room));
 }
 
 STATUS_CODE Game::change_ct(const string& room,

@@ -3,6 +3,12 @@
 #include "net_utils.h"
 #include <boost/thread.hpp>
 
+
+/**
+MsgSock applys msg snd/rcv abbilty.
+
+and use token() and session() to set up or invalidate token and session.
+*/
 class MsgSock : public TcpSock
 {
 protected:
@@ -14,6 +20,9 @@ protected:
     
     const char PACKET_BEGIN_CHAR = '<';
     const char PACKET_END_CHAR = '>';
+
+	u64 _token;
+	u64 _session;
 public:
     MsgSock();
     /* bugs when  */
@@ -28,10 +37,15 @@ public:
     int fail();
 
     static void max_failures(int v);
+
+	inline void session(u64 s = INVALID_SESSION) { _session = s; }
+	inline void token(u64 t = INVALID_TOKEN) { _token = t; }
 public:
     template<class T>
-    int send_msg(const T& msg)
+    int send_msg(T&& msg)
     {
+		msg.token = _token;
+		msg.session = _session;
         auto raw = pack(msg);
         if(raw.empty()) return 1;
         raw = PACKET_BEGIN_CHAR + raw + PACKET_END_CHAR;
@@ -40,7 +54,7 @@ public:
     shared_ptr<msg_t> rcv_msg();
 
     /* msg snd intfs */
-    int rslt(u32 stat, const string& rslt);
+    int rslt(u32 stat, const string& rslt = "");
     int req_rooms();
     int req(u32 target, u32 oper);
     int reg(const string& name);

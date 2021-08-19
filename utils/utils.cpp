@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <climits>
 #include "msg.h"
-
+#include <spes/utils.h>
 
 typedef union
 {
@@ -30,9 +30,9 @@ u64 generate_token(const char* ips, u16 port)
 u64 generate_session()
 {
     constexpr const u64 HALF = 0xffffffff;
-    u64 ret = rand() % HALF;
+    u64 ret = smush() % HALF;
     ret <<= 32;
-    ret |= rand() % HALF;
+    ret |= smush() % HALF;
     return ret;
 }
 

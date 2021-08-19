@@ -13,6 +13,8 @@ Game main logic
 this class contains all game logic.
 include player/room/game operations.
 
+*NOTICE*: never create player_t, room_t inst in this class.
+
 1. Player
 a player name was limited in 36 characters. and some other restrictions.
 Game won't do additional check to identify player. it just use name to identify each player.
@@ -116,7 +118,7 @@ public:
     /*
      * get room list
      */
-    void roomlist(vector<shared_ptr<room_t>>&);
+    void roomlist(vector<room_t>&);
     /*
 	 * S_ROOM_ILLEGAL_OPER for not owner, or invalid ct
      */
@@ -137,10 +139,7 @@ public:
      * callback when a match done.
      */
     void match_ovr(shared_ptr<Match> m);
-private:
+public:
     Game();
     Game(const Game&) = delete;
-    static shared_ptr<Game> _inst;
-public:
-    static shared_ptr<Game> get();
 };

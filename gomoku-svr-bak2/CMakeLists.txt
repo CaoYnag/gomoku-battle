@@ -19,15 +19,17 @@ if(WIN32)
 endif()
 
 set(SRC
+    ${PROJECT_SOURCE_DIR}/room.cpp
     ${PROJECT_SOURCE_DIR}/user_agent.cpp
     ${PROJECT_SOURCE_DIR}/game_svr.cpp
     ${PROJECT_SOURCE_DIR}/match_svr.cpp
+    ${PROJECT_SOURCE_DIR}/game.cpp
     ${PROJECT_SOURCE_DIR}/svr.cpp
     ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
 add_executable(server ${SRC})
-target_link_libraries(server utils svr)
+target_link_libraries(server utils boost_thread)
 if(WIN32)
 endif()
 if(UNIX)

@@ -99,7 +99,11 @@ int TcpSock::init()
 
 void TcpSock::close()
 {
-    if(_sock > 0) ::close(_sock);
+    if(_sock > 0)
+	{
+		::close(_sock);
+		_sock = 0;
+	}
 }
 
 int TcpSock::listen(int conn)

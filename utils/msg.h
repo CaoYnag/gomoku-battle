@@ -21,10 +21,7 @@ constexpr const u32 MSG_T_CHESS      = 0x7;
 constexpr const u32 MSG_T_STATE      = 0x8;
 constexpr const u32 MSG_T_GAME       = 0x9;
 constexpr const u32 MSG_T_MOVE       = 0xa;
-
-constexpr const u64 TOKEN_INVALID    = 0;
-constexpr const u64 SESSION_INVALID  = 0;
-
+constexpr const u32 MSG_T_UNREGISTER = 0xb;
 
 struct msg_t
 {
@@ -49,9 +46,10 @@ struct msg_result : public msg_t
     RTTR_ENABLE(msg_t)
     public:
     u32 status;
-    string result;
+    string result; // do not use this field if unnecessary.
 
     msg_result();
+	msg_result(u32 s);
     msg_result(u32 s, const string& r);
 };
 
@@ -76,6 +74,14 @@ struct msg_reg : public msg_t
     msg_reg(const string& name);
 };
 
+struct msg_unreg : public msg_t
+{
+	RTTR_ENABLE(msg_t)
+	public:
+
+	msg_unreg();
+};
+
 struct msg_roomlist : public msg_t
 {
     RTTR_ENABLE(msg_t)
@@ -97,16 +103,26 @@ struct msg_room_oper : public msg_t
     msg_room_oper(u32 t, const room_t& r);
 };
 
-/* player join or exit */
+/* 
+ * player join or exit
+ * player change ct or state
+ */
+enum ROOM_INFO
+{
+	RI_PLAYER_JOIN,
+	RI_PLAYER_EXIT,
+	RI_PLAYER_STATE,
+	RI_PLAYER_CHESS
+};
 struct msg_room_info : public msg_t
 {
     RTTR_ENABLE(msg_t)
     public:
     u32 type;
-    string name;
+    room_t room;
 
     msg_room_info();
-    msg_room_info(u32 t, const string& n);
+    msg_room_info(u32 t, const room_t& r);
 };
 
 /* choose chess type */
@@ -192,6 +208,7 @@ u32 unpack(const msg_raw_t& raw, T& msg)
 shared_ptr<msg_result> unpack_result(const msg_raw_t& raw);
 shared_ptr<msg_request> unpack_request(const msg_raw_t& raw);
 shared_ptr<msg_reg> unpack_reg(const msg_raw_t& raw);
+shared_ptr<msg_unreg> unpack_unreg(const msg_raw_t& raw);
 shared_ptr<msg_roomlist> unpack_roomlist(const msg_raw_t& raw);
 shared_ptr<msg_room_oper> unpack_roomoper(const msg_raw_t& raw);
 shared_ptr<msg_room_info> unpack_roominfo(const msg_raw_t& raw);
@@ -216,6 +233,7 @@ RTTR_REGISTRATION
 		.property("name", &room_t::name)
 		.property("psw", &room_t::psw)
 		.property("oct", &room_t::oct)
+		.property("gs", &room_t::gs)
 		.property("state", &room_t::state)
 		.property("owner", &room_t::owner)
 		.property("guest", &room_t::guest);
@@ -235,6 +253,8 @@ RTTR_REGISTRATION
     registration::class_<msg_reg>("Register")
 		.constructor<>()
 		.property("name", &msg_reg::name);
+	registration::class_<msg_unreg>("Unregister")
+		.constructor<>();
     registration::class_<msg_roomlist>("RoomList")
 		.constructor<>()
 		.property("rooms", &msg_roomlist::rooms);
@@ -245,7 +265,7 @@ RTTR_REGISTRATION
     registration::class_<msg_room_info>("RoomInfo")
 		.constructor<>()
 		.property("type", &msg_room_info::type)
-		.property("name", &msg_room_info::name);
+		.property("room", &msg_room_info::room);
     registration::class_<msg_chess>("Chess")
 		.constructor<>()
 		.property("type", &msg_chess::type);

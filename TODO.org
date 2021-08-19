@@ -1,10 +1,16 @@
 * TODO
+** Common
+*** TODO serialize
+make serialize lib no bugs.
+and change all field into shared_ptr.
+
+currently serialize has seq bugs.
 ** Svr
-*** TODO room logic collide
+*** DONE room logic collide
 collide in Game and Room.
 *** TODO game stats
 record game statistics.
-*** TODO use some code to instead string msg.
+*** DONE use some code to instead string msg.
 ** Server
 *** DONE user token generator
 ip(32) + port(16) + cnt(16)
@@ -16,3 +22,4 @@ add logs. record infomations about user operation and exceptions.
 game and match should use defferent connections.
 *** TODO game-draw detect
 detect draw in Gomoku::check
+** GUI
