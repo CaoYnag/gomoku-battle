@@ -21,27 +21,31 @@ STATUS_CODE Room::join(shared_ptr<player_t> user, const string& psw)
 	lock_guard<mutex> lock(_guard);
     if(user == _owner || user == _guest)
 		return S_ROOM_ALREADY_INSIDE;
-    if(_guest)
+    if(_room->state == ROOM_STATE_FULL)
 		return S_ROOM_FULL;
     if(psw != _room->psw)
-		return S_ROOM_ILLEGAL_PSW;
+		return S_ROOM_ILLEGAL_ACCESS;
     _guest = user;
     _guest->state = PLAYER_STATE_PREPARE; // default state
+	_room->state = ROOM_STATE_FULL;
     return S_OK;
 }
 
 STATUS_CODE Room::leave(shared_ptr<player_t> user)
 {
 	lock_guard<mutex> lock(_guard);
-    user->state = PLAYER_STATE_PREPARE; // recover to default state
+
     if(user == _guest)
     {
+		user->state = PLAYER_STATE_IDLE; // recover to default state
 		_guest = nullptr;
 		_room->guest = "";
+		_room->state = ROOM_STATE_OPEN;
 		return S_OK;
     }
     if(user == _owner)
     {
+		user->state = PLAYER_STATE_IDLE; // recover to default state
 		if(_guest)
 		{
 			_owner = _guest;
@@ -50,7 +54,7 @@ STATUS_CODE Room::leave(shared_ptr<player_t> user)
 			// so now, the new owner use another chess type.
 			_room->owner = _owner->name;
 			_room->guest = "";
-			return 1;
+			return S_OK;
 		}
 		else return S_ROOM_EMPTY; // room empty, need to be destroyed
     }

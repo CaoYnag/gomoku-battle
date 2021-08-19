@@ -78,18 +78,18 @@ constexpr const u32 GAME_RSLT_ERROR    = 0x4;
 
 /* =============== some result code =============== */
 // 1. player
-constexpr const STATUS_CODE S_PLAYER_INVALID_NAME 	= 0x1; // reg
+constexpr const STATUS_CODE S_PLAYER_INVALID_META 	= 0x1; // reg
 constexpr const STATUS_CODE S_PLAYER_EXISTS 		= 0x2; // reg
 constexpr const STATUS_CODE S_PLAYER_INVALID 		= 0x3; // any other opers, like join room
 constexpr const STATUS_CODE S_PLAYER_BUSY			= 0x4; // unregister, join room
 // maybe some token status here in future.
 
 // 2. room
-constexpr const STATUS_CODE S_ROOM_INVALID_NAME 	= 0x11; // create room
+constexpr const STATUS_CODE S_ROOM_INVALID_META 	= 0x11; // create room
 constexpr const STATUS_CODE S_ROOM_EXISTS 			= 0x12; // create room
 constexpr const STATUS_CODE S_ROOM_NOT_EXISTS 		= 0x13; // join/exit room
 constexpr const STATUS_CODE S_ROOM_FULL 			= 0x14; // join room
-constexpr const STATUS_CODE S_ROOM_ILLEGAL_PSW		= 0x15; // join room
+constexpr const STATUS_CODE S_ROOM_ILLEGAL_ACCESS	= 0x15; // join room
 constexpr const STATUS_CODE S_ROOM_ALREADY_INSIDE	= 0x16; // join room
 constexpr const STATUS_CODE S_ROOM_ILLEGAL_OPER 	= 0x17; // exit room, change ct/state
 constexpr const STATUS_CODE S_ROOM_EMPTY			= 0x19; // exit room. need destroy room.
@@ -125,6 +125,7 @@ struct room_t
 	string guest;
 
     room_t();
+	room_t(const string& name);
     room_t(const string& name, const string& psw);
     room_t(u32 i, const string& n, const string& p, u32 oct, u32 s);
     room_t(const room_t& room);

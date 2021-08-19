@@ -62,11 +62,13 @@ public:
     /* some monitor intf here */
 public:
     /*
+	 * check player metadata
+	 * name only now
      * check name format.
      * return true for success
      * throw an exception for failed msg.
      */
-    bool name_check(const string& name);
+    bool player_check(shared_ptr<player_t> player);
     /*
      * check room name and psw format.
      */
@@ -79,7 +81,7 @@ public:
     /* interfaces */
 public:
     /* 
-	 * S_PLAYER_INVALID_NAME for invalid name
+	 * S_PLAYER_INVALID_META for invalid player info
 	 * S_PLAYER_EXISTS for player already exists.
 	 */ 
 	STATUS_CODE register_player(shared_ptr<player_t> player);
@@ -89,18 +91,23 @@ public:
 	 */
 	STATUS_CODE unregister_player(shared_ptr<player_t> player);
 	/*
-	 * S_ROOM_INVALID_NAME
+	 * S_ROOM_INVALID_META
 	 * S_ROOM_EXISTS
+	 * S_PLAYER_INVALID
+	 * S_PLAYER_BUSY
 	 */
     STATUS_CODE create_room(const string& player, shared_ptr<room_t> room);
     /* 
 	 * S_ROOM_NOT_EXISTS
 	 * S_ROOM_FULL
-	 * S_ROOM_ILLEGAL_PSW
+	 * S_ROOM_ILLEGAL_ACCESS
 	 * S_ROOM_ALREAY_INSIDE
+	 * S_PLAYER_INVALID
+	 * S_PLAYER_BUSY
 	 */
     STATUS_CODE join_room(const string& player, shared_ptr<room_t> room);
     /*
+	 * S_PLAYER_NOT_EXISTS
 	 * S_ROOM_NOT_EXISTS
 	 * S_ROOM_ILLEGAL_OPER for not in room
 	 * if room empty after player exit, destroy this room

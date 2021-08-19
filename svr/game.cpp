@@ -51,10 +51,10 @@ void Game::rm_room(const string& name)
 	_rmap.erase(name);
 }
 
-bool Game::name_check(const string& name)
+bool Game::player_check(shared_ptr<player_t> player)
 {
-    if(name.length() <= 0 || name.length() >= 36)
-	throw runtime_error("name length out of range.");
+    if(player->name.length() <= 0 || player->name.length() >= 36)
+		throw runtime_error("name length out of range.");
     // no other rules now
     return true;
 }
@@ -79,17 +79,18 @@ u32 Game::gen_id()
 
 STATUS_CODE Game::register_player(shared_ptr<player_t> player)
 {
-    try{name_check(player->name);}
+    try{player_check(player);}
 	catch(exception& e)
 	{
 		spdlog::warn("error register player {}: {}", player->name, e.what());
-		return S_PLAYER_INVALID_NAME;
+		return S_PLAYER_INVALID_META;
 	}
     lock_guard<mutex> lock(_reg_guard);
     auto exist = get_player(player->name);
 	if(exist)
 	{
 		spdlog::warn("register failed, player exists: {}", player->name);
+		return S_PLAYER_EXISTS;
 	}
     add_player(player);
     return S_OK;
@@ -116,7 +117,7 @@ STATUS_CODE Game::create_room(const string& player,
 	catch(exception& e)
 	{
 		spdlog::debug("error create room {} by {}: {}", room->name, player, e.what());
-		return S_ROOM_INVALID_NAME;
+		return S_ROOM_INVALID_META;
 	}
 
 	// TODO need lock this player?
@@ -151,9 +152,18 @@ STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 		spdlog::debug("{} join {} failed: room not exists.", player, room->name);
 		return S_ROOM_NOT_EXISTS;
 	}
-	
-    lock_guard<mutex> lock(target->_guard);
 	auto p = get_player(player);
+	if(!p)
+	{
+		spdlog::debug("error join room {}: player {} not exists.", room->name, player);
+		return S_PLAYER_INVALID;
+	}
+    if(p->state != PLAYER_STATE_IDLE)
+	{
+		spdlog::debug("player {} already joined other room.", player);
+		return S_PLAYER_BUSY;
+	}
+    lock_guard<mutex> lock(target->_guard);
 	return target->join(p, room->psw);
 }
 
@@ -165,6 +175,11 @@ STATUS_CODE Game::exit_room(const string& player, const string& room)
     {
 		spdlog::debug("error {} leaving {}: room not exists");
 		return S_ROOM_NOT_EXISTS;
+	}
+	if(!p)
+	{
+		spdlog::debug("error exit room {}: player {} not exists.", r->_room->name, player);
+		return S_PLAYER_INVALID;
 	}
     lock_guard<mutex> lock(r->_guard);
 	auto ret = r->leave(p);

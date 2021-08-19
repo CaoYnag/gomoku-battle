@@ -15,6 +15,9 @@ player_t::player_t(u32 d, const string& n, u32 s, const string& i, u32 p)
 
 room_t::room_t() : id(ID_INVALID), oct(CHESS_WHITE), state(ROOM_STATE_OPEN)
 {}
+room_t::room_t(const string& n)
+	: id(ID_INVALID), name(n), oct(CHESS_WHITE), state(ROOM_STATE_OPEN)
+{}
 room_t::room_t(const string& n, const string& p)
     : id(ID_INVALID), name(n), psw(p), oct(CHESS_WHITE), state(ROOM_STATE_OPEN)
 {}
