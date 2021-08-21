@@ -7,6 +7,8 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <nlohmann/json.hpp>
+using namespace nlohmann;
 using namespace rttr;
 using namespace io::serialize;
 using std::cout;
@@ -87,6 +89,28 @@ RTTR_REGISTRATION
 	.constructor<>()
 	.property("data", &Container::data)
 	.property("datas", &Container::datas);
+}
+
+BOOST_AUTO_TEST_CASE(test_prop)
+{
+	Sub sub;
+	sub.b = true;
+	sub.d = .1;
+	sub.str = "?";
+	instance o = sub;
+	const auto props = o.get_derived_type().get_properties();
+	BOOST_CHECK_EQUAL(3, props.size());
+
+	auto json_str = serialize(sub);
+	cout << "json: " << json_str << endl;
+//	deserialize(sub, json_str);
+	json j = json::parse(json_str);
+	for(auto prop : props)
+	{
+		json attr = j[prop.get_name().data()];
+		cout << prop.get_name() << ": " << attr << endl;
+		BOOST_CHECK(j.contains(prop.get_name()));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(base_serialize)
@@ -190,7 +214,7 @@ BOOST_AUTO_TEST_CASE(Test)
 
 }
 
-BOOST_AUTO_TEST_CASE(DeserializeTest)
+BOOST_AUTO_TEST_CASE(deserialize_test)
 {
     Sub sub_sample = {"sample", false, 0.3};
     auto sub_json = serialize(sub_sample);
@@ -219,13 +243,13 @@ BOOST_AUTO_TEST_CASE(DeserializeTest)
     auto sub3_json = serialize(sub3_sample);
     Sub3 sub3;
     BOOST_REQUIRE(deserialize(sub3_json, sub3));
-    BOOST_CHECK(sub3.imap.size() == 2);
-    BOOST_CHECK(sub3.imap[1] == 2);
-    BOOST_CHECK(sub3.imap[2] == 3);
-    BOOST_CHECK(sub3.smap.size() == 2);
-    BOOST_CHECK(sub3.smap["a"] == 1);
-    BOOST_CHECK(sub3.smap["b"] == 2);
-    BOOST_CHECK(sub3.cmap.size() == 1);
+    BOOST_CHECK_EQUAL(sub3.imap.size(), 2);
+    BOOST_CHECK_EQUAL(sub3.imap[1], 2);
+    BOOST_CHECK_EQUAL(sub3.imap[2], 3);
+    BOOST_CHECK_EQUAL(sub3.smap.size(), 2);
+    BOOST_CHECK_EQUAL(sub3.smap["a"], 1);
+    BOOST_CHECK_EQUAL(sub3.smap["b"], 2);
+    BOOST_CHECK_EQUAL(sub3.cmap.size(), 1); // object pointer still not valid. 
 }
 
 BOOST_AUTO_TEST_CASE(test_shared_ptr_serialize)
