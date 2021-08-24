@@ -176,7 +176,15 @@ for example, a `msg_room_info` do not need room name or psw.
 
 ##### match server
 
-`match server` use tcp?
+a `match` comes from a room in `game svr`.
+
+now, match svr doesn't use different process or connection.
+
+to identify a match, use a fixed session id.
+when room owner snd a `msg_game` to svr. svr generate a match from the room, and generate a session id(match id), and snd `msg_game` to players with this session id.
+
+maybe i will really seperate match server and game server in future.
+but, not now. when i need a distributed svr, maybe i will do that.
 
 ### Message Defination
 

@@ -5,15 +5,15 @@
 #include <string>
 using namespace std;
 
-typedef char s8;
-typedef short s16;
-typedef int s32;
-typedef long long s64;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
 typedef float f32;
 typedef double f64;
@@ -23,6 +23,7 @@ typedef u32 STATUS_CODE;
 
 constexpr const int BOARD_SIZE = 15;
 constexpr const int BOARD_POINT_NUM = BOARD_SIZE * BOARD_SIZE;
+constexpr const int MAX_ILLEGAL_MOVE = 5;
 
 constexpr const u32 INVALID_ID 			= -1;
 constexpr const u64 INVALID_TOKEN 		= -1;
@@ -95,7 +96,7 @@ constexpr const STATUS_CODE S_ROOM_NOT_EXISTS 		= 0x203; // join/exit room
 constexpr const STATUS_CODE S_ROOM_FULL 			= 0x204; // join room
 constexpr const STATUS_CODE S_ROOM_ILLEGAL_ACCESS	= 0x205; // join room
 constexpr const STATUS_CODE S_ROOM_ALREADY_INSIDE	= 0x206; // join room
-constexpr const STATUS_CODE S_ROOM_ILLEGAL_OPER 	= 0x207; // exit room, change ct/state
+constexpr const STATUS_CODE S_ROOM_ILLEGAL_OPER 	= 0x207; // exit room, change ct/state, start game.
 constexpr const STATUS_CODE S_ROOM_EMPTY			= 0x208; // exit room. need destroy room.
 
 // 4. game
@@ -103,11 +104,50 @@ constexpr const STATUS_CODE S_GAME_NO_GUEST 		= 0x301; // start game
 constexpr const STATUS_CODE S_GAME_ILLEGAL_OPER 	= 0x302; // guest start game
 constexpr const STATUS_CODE S_GAME_NOT_PREPARE 		= 0x303; // guest not prepared
 
+// 5. match
+constexpr const STATUS_CODE S_MATCH_ILLEGAL_MOVE	= 0x401; // move
+constexpr const STATUS_CODE S_MATCH_OPER_TIMEOUT	= 0x402; // player operation timeout.
+
 string str_status_code(STATUS_CODE code);
+
+
+enum MATCH_RESULTS
+{
+	MATCH_RESULT_DRAW = 0,
+	MATCH_RESULT_OWNER_WIN,
+	MATCH_RESULT_GUEST_WIN,
+
+	/*  */
+	MATCH_RESULT_ERROR,
+};
+
+struct match_result
+{
+	long begin;
+	long end;
+	int steps;
+	u32 result;
+};
+
+struct player_records
+{
+	string player;
+	long total; // total match
+	long win; // win match
+	long lose; // lose match
+	f32 avg_step; // avg steps in all match.
+
+	player_records();
+	void game_win(int step);
+	void game_lose(int step);
+	void game_draw(int step);
+private:
+	void update_total_and_step(int step);
+};
 
 struct player_t
 {
-    u32 id;
+    u64 id;
     string name;
     u32 state;
     string ip;
@@ -115,12 +155,12 @@ struct player_t
 
     player_t();
     player_t(const string& name);
-    player_t(u32 id, const string& name, u32 state, const string& ip, u32 port);
+    player_t(u64 id, const string& name, u32 state, const string& ip, u32 port);
 };
 
 struct room_t
 {
-    u32 id;
+    u64 id;
     string name;
     string psw;
     u32 oct;
@@ -132,6 +172,6 @@ struct room_t
     room_t();
 	room_t(const string& name);
     room_t(const string& name, const string& psw);
-    room_t(u32 i, const string& n, const string& p);
+    room_t(u64 i, const string& n, const string& p);
     room_t(const room_t& room);
 };

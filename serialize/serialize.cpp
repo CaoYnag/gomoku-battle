@@ -45,7 +45,7 @@ bool write_atomic_types(const type& t, const variant& v, json& j, const char* na
 			write_json(j, v.to_double(), name);
 		else if (t == type::get<double>())
 			write_json(j, v.to_double(), name);
-
+		
 		return true;
     }
     else if (t.is_enumeration())

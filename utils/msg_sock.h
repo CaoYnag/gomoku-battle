@@ -1,9 +1,8 @@
 #pragma once
 #include "msg.h"
 #include "net_utils.h"
-#include <boost/thread.hpp>
-
-
+#include <mutex>
+using namespace std;
 /**
 MsgSock applys msg snd/rcv abbilty.
 
@@ -16,7 +15,7 @@ protected:
     
     string _tmp;
     int _failures;
-    boost::mutex _fguard;
+	mutex _fguard;
     
     const char PACKET_BEGIN_CHAR = '<';
     const char PACKET_END_CHAR = '>';
@@ -59,13 +58,10 @@ public:
     int req(u32 target, u32 oper);
     int reg(const string& name);
     int roomlist(const vector<room_t>& rooms);
-    int room_oper(u32 type, const room_t& room); // create/join/exit
     int create_room(const string& name, const string& psw);
     int join_room(const string& name, const string& psw);
     int exit_room(const string& name);
-    int user_join_room(const string& name);
-    int user_exit_room(const string& name);
-    int roominfo(u32 type, const string& name);
+    int roominfo(u32 type, const room_t& room);
     int choose_chess(u32 type);
     int set_chess(u32 type);
     int snd_chess(u32 type);
@@ -74,7 +70,7 @@ public:
     int game_win();
     int game_lose();
     int game_draw();
-    int game_err(const string& msg);
+	int game_err();
     int snd_game(u32 state, u32 ex);
     int move(u32 x, u32 y);
     int move(u32 chess, u32 x, u32 y);

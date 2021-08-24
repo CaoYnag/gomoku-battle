@@ -45,13 +45,10 @@ int main()
     rooms.emplace_back(0, "name2", "psw2");
     rooms.emplace_back(0, "name3", "psw3");
     sock.roomlist(rooms);
-    sock.room_oper(0, rooms[1]); // create/join/exit
     sock.create_room("name4", "psw4");
     sock.join_room("name4", "psw4");
     sock.exit_room("name1");
-    sock.user_join_room("user1");
-    sock.user_exit_room("user2");
-    sock.roominfo(0, "user");
+    sock.roominfo(0, rooms[1]);
     sock.choose_chess(0);
     sock.set_chess(0);
     sock.snd_chess(0);

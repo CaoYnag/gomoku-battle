@@ -91,6 +91,13 @@ RTTR_REGISTRATION
 	.property("datas", &Container::datas);
 }
 
+BOOST_AUTO_TEST_CASE(test_type)
+{
+	BOOST_CHECK_EQUAL(sizeof(uint64_t), 8);
+	BOOST_CHECK_EQUAL(sizeof(unsigned long long), 8);
+	// BOOST_CHECK_EQUAL(type::get<uint64_t>(), type::get<unsigned long long>());
+}
+
 BOOST_AUTO_TEST_CASE(test_prop)
 {
 	Sub sub;

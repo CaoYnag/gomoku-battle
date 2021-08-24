@@ -1,4 +1,6 @@
 * TODO
+** Game
+*** TODO add undo
 ** Common
 *** DONE serialize
 make serialize lib no bugs.

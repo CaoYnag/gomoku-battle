@@ -5,6 +5,7 @@
 #include <thread>
 #include <memory>
 #include "match.h"
+#include "player.h"
 using namespace std;
 
 /**
@@ -29,12 +30,13 @@ unreg
 class Game
 {
 protected:
-    vector<shared_ptr<Room>> _rooms;            // all rooms
-    map<string, shared_ptr<Room>> _rmap;
-    vector<shared_ptr<player_t>> _players;      // all players
-    map<string, shared_ptr<player_t>> _pmap;    // name : player
-    mutex _reg_guard;  // reg guard
-    mutex _room_guard; // room guard
+	map<string, shared_ptr<Match>>	_mmap;			// room name : match
+    vector<shared_ptr<Room>> 		_rooms;         // all rooms
+    map<string, shared_ptr<Room>> 	_rmap;
+    vector<shared_ptr<Player>> 		_players;		// all players
+    map<string, shared_ptr<Player>> _pmap;			// name : player
+    mutex 							_reg_guard;  	// reg guard
+    mutex 							_room_guard;	// room guard
 
 public:
     virtual ~Game();
@@ -45,21 +47,16 @@ protected:
 	 * so, make sure guard locked and data legally.
 	 */
 	
-	void add_player(shared_ptr<player_t> player);
+	void add_player(shared_ptr<Player> player);
 	void rm_player(const string& name);
 	void add_room(shared_ptr<Room> room);
 	void rm_room(const string& name);
 public:
     /* some data intf */
     // shared_ptr<Player> get_player(u32 id);
-    inline shared_ptr<player_t> get_player(const string& name)
-    {
-        return _pmap[name];
-    } 
-    inline shared_ptr<Room> get_room(const string& name)
-    {
-        return _rmap[name];
-    }
+    inline shared_ptr<Player> get_player(const string& name) { return _pmap[name]; } 
+    inline shared_ptr<Room> get_room(const string& name) { return _rmap[name]; }
+	inline shared_ptr<Match> get_match(const string& name) { return _mmap[name]; }
 public:
     /* some monitor intf here */
 public:
@@ -70,7 +67,7 @@ public:
      * return true for success
      * throw an exception for failed msg.
      */
-    bool player_check(shared_ptr<player_t> player);
+    bool player_check(shared_ptr<Player> player);
     /*
      * check room name and psw format.
      */
@@ -86,12 +83,12 @@ public:
 	 * S_PLAYER_INVALID_META for invalid player info
 	 * S_PLAYER_EXISTS for player already exists.
 	 */ 
-	STATUS_CODE register_player(shared_ptr<player_t> player);
+	STATUS_CODE register_player(shared_ptr<Player> player);
 	/*
 	 * S_PLAYER_INVALID
 	 * S_PLAYER_BUSY
 	 */
-	STATUS_CODE unregister_player(shared_ptr<player_t> player);
+	STATUS_CODE unregister_player(shared_ptr<Player> player);
 	/*
 	 * S_ROOM_INVALID_META
 	 * S_ROOM_EXISTS
@@ -132,13 +129,15 @@ public:
 	 * S_GAME_NO_GUEST
 	 * S_GAME_ILLEGAL_OPER not owner
      */
-	// TODO how can i emit a match?
+	// just generate a match.
+	// then, the svr impl should call match::run in a new thread, maybe with a tp.
+	// after match::end, call game::match_ovr(match, result);
     STATUS_CODE start_match(const string& room, const string& player);
 
     /*
-     * callback when a match done.
+     * callthis when a match done to clean some runtime stats.
      */
-    void match_ovr(shared_ptr<Match> m);
+    void match_ovr(shared_ptr<Match> m, shared_ptr<match_result> result);
 public:
     Game();
     Game(const Game&) = delete;

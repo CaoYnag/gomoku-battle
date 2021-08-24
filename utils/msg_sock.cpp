@@ -21,7 +21,7 @@ MsgSock::~MsgSock()
 
 int MsgSock::fail()
 {
-    boost::lock_guard<boost::mutex> lock(_fguard);
+    lock_guard<mutex> lock(_fguard);
     return ++_failures > MAX_ILLEGAL_OPER;
 }
 
@@ -89,11 +89,8 @@ shared_ptr<msg_t> MsgSock::rcv_msg()
     case MSG_T_ROOM_LIST:
 		ret = unpack_roomlist(msg_str);
 		break;
-    case MSG_T_ROOM_OPER:
-		ret = unpack_roomoper(msg_str);
-		break;
-    case MSG_T_ROOM_INFO:
-		ret = unpack_roominfo(msg_str);
+    case MSG_T_ROOM:
+		ret = unpack_room(msg_str);
 		break;
     case MSG_T_CHESS:
 		ret = unpack_chess(msg_str);
@@ -138,41 +135,22 @@ int MsgSock::roomlist(const vector<room_t>& rooms)
 {
     return send_msg(msg_roomlist(rooms));
 }
-
-int MsgSock::room_oper(u32 type, const room_t& room)
+int MsgSock::roominfo(u32 type, const room_t& room)
 {
-    return send_msg(msg_room_oper(type, room));
+    return send_msg(msg_room(type, room));
 }
 
-// create/join/exit
 int MsgSock::create_room(const string& name, const string& psw)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_CREATE, room_t(name, psw)));
+	return roominfo(ROOM_OPER_CREATE, room_t(name, psw));
 }
-
 int MsgSock::join_room(const string& name, const string& psw)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_JOIN, room_t(name, psw)));
+	return roominfo(ROOM_OPER_JOIN, room_t(name, psw));
 }
-
 int MsgSock::exit_room(const string& name)
 {
-    return send_msg(msg_room_oper(ROOM_OPER_EXIT, room_t(name, "")));
-}
-
-int MsgSock::user_join_room(const string& name)
-{
-    return roominfo(ROOM_INFO_JOIN, name);
-}
-
-int MsgSock::user_exit_room(const string& name)
-{
-    return roominfo(ROOM_INFO_EXIT, name);
-}
-
-int MsgSock::roominfo(u32 type, const string& name)
-{
-    return send_msg(msg_room_info(type, name));
+	return roominfo(ROOM_OPER_EXIT, room_t(name));
 }
 
 int MsgSock::choose_chess(u32 type)
@@ -214,9 +192,10 @@ int MsgSock::game_draw()
 {
     return snd_game(GAME_STATE_END, GAME_RSLT_DRAW);
 }
-int MsgSock::game_err(const string& msg)
+
+int MsgSock::game_err()
 {
-    return send_msg(msg_game(GAME_STATE_END, GAME_RSLT_ERROR, msg));
+    return snd_game(GAME_STATE_END, GAME_RSLT_ERROR);
 }
 
 int MsgSock::snd_game(u32 state, u32 ex)

@@ -13,6 +13,6 @@ struct GlobalConf
     static GlobalConf* _inst;
     static GlobalConf* get();
 private:
-    GlobalConf() = delete;
+    GlobalConf();
     GlobalConf(const GlobalConf&) = delete;
 };

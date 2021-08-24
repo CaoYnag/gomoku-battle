@@ -14,6 +14,7 @@ Gomoku::~Gomoku()
 
 int Gomoku::get(int x, int y)
 {
+	if(x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return -1;
     return _board[y * _size + x];
 }
 void Gomoku::set(int x, int y, int v)
@@ -46,8 +47,8 @@ void Gomoku::check(int x, int y)
     while((++xx < _size) && (get(xx, yy) == v)) ++cnt;
     if(cnt > 4) 
     {
-	_state = v;
-	return;
+		_state = v;
+		return;
     }
     
     
@@ -61,8 +62,8 @@ void Gomoku::check(int x, int y)
     while(++yy < _size && get(xx, yy) == v) ++cnt;
     if(cnt > 4) 
     {
-	_state = v;
-	return;
+		_state = v;
+		return;
     }
     
     // nw
@@ -75,8 +76,8 @@ void Gomoku::check(int x, int y)
     while(++yy < _size && ++xx && get(xx, yy) == v) ++cnt;
     if(cnt > 4) 
     {
-	_state = v;
-	return;
+		_state = v;
+		return;
     }
     
     // ne
@@ -89,8 +90,8 @@ void Gomoku::check(int x, int y)
     while(--yy >= 0 && ++xx && get(xx, yy) == v) ++cnt;
     if(cnt > 4) 
     {
-	_state = v;
-	return;
+		_state = v;
+		return;
     }
 }
 int Gomoku::put(int x, int y, int v)

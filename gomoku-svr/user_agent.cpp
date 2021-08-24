@@ -1,4 +1,5 @@
 #include "game_svr.h"
+#include <unistd.h>
 
 // these state only use for UserAgent
 constexpr const u32 USER_STATE_IDLE = 0;    // reged to svr, but did nothing
@@ -7,7 +8,7 @@ constexpr const u32 USER_STATE_GAME = 2;    // started a match
 constexpr const u32 USER_STATE_ERR  = 0x8000;   // err/exited
 
 UserAgent::UserAgent(shared_ptr<MsgSock> sock, const string& name)
-    : player_t(INVALID_ID, name, 0, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE), _token(INVALID_TOKEN)
+    : Player(INVALID_ID, name, sock->ip(), sock->port()), _sock(sock), _state(USER_STATE_IDLE), _token(INVALID_TOKEN)
 {}
 
 UserAgent::~UserAgent()
@@ -76,27 +77,27 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
         }
         else rslt(S_ILLEGAL_MSG);
     }break;
-    case MSG_T_ROOM_OPER:
+    case MSG_T_ROOM:
     {
-        auto oper = static_pointer_cast<msg_room_oper>(msg);
+        auto oper = static_pointer_cast<msg_room>(msg);
         if(oper->type == ROOM_OPER_CREATE)
         {
-			auto s = svr->create_room(name, oper->room);
+			auto s = svr->create_room(name, make_shared<room_t>(oper->room));
 			if(!s)
 			{
 				_state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
-				_room = game->get_room(oper->room->name);
+				_room = svr->game()->get_room(oper->room.name)->_room;
 			}
 			rslt(s);
         }
         else if(oper->type == ROOM_OPER_JOIN)
         {
-			auto s = svr->join_room(name, oper->room);
+			auto s = svr->join_room(name, make_shared<room_t>(oper->room));
 			if(!s)
 			{
 				_state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
-				_room = svr->get_room(oper->room.name);
-				_sock->roominfo(RI_PLAYER_JOIN, _room);
+				_room = svr->game()->get_room(oper->room.name)->_room;
+				_sock->roominfo(RI_PLAYER_JOIN, *_room);
 				// TODO notice owner
 			} else rslt(s);
         }
@@ -118,7 +119,7 @@ int UserAgent::room(shared_ptr<msg_t> msg)
     {
         // change chess type
 		auto ct = static_pointer_cast<msg_chess>(msg);
-		auto s = svr->change_ct(_room, name, ct->type);
+		auto s = svr->change_ct(_room->name, name, ct->type);
 		rslt(s);
 		// TODO notice guest here if success
     }break;
@@ -126,17 +127,17 @@ int UserAgent::room(shared_ptr<msg_t> msg)
     {
 		// change state
 		auto sm = static_pointer_cast<msg_state>(msg);
-		auto s = svr->change_state(_room, name, sm->state);
+		auto s = svr->change_state(_room->name, name, sm->state);
 		rslt(s);
 		// TODO notice owner here
     }break;
-    case MSG_T_ROOM_OPER:
+    case MSG_T_ROOM:
     {
 		// only exit here now.
-		auto oper = static_pointer_cast<msg_room_oper>(msg);
+		auto oper = static_pointer_cast<msg_room>(msg);
 		if(oper->type == ROOM_OPER_EXIT)
 		{
-			auto s = svr->exit_room(name, _room);
+			auto s = svr->exit_room(name, _room->name);
 
 			if(!s)
 			{
@@ -153,7 +154,7 @@ int UserAgent::room(shared_ptr<msg_t> msg)
 		auto req = static_pointer_cast<msg_request>(msg);
 		if(req->oper == REQ_GAME_START)
 		{
-			auto s = svr->start_match(_room, name);
+			auto s = svr->start_match(_room->name, name);
 			if(!s)
 			{
 				// success, enter game state
@@ -174,9 +175,8 @@ int UserAgent::game(shared_ptr<msg_t> msg)
     {
     case MSG_T_MOVE:
     {
-        // change chess type
-		auto ct = static_pointer_cast<msg_chess>(msg);
-		svr->changechess(_room, name, ct->type);
+		lock_guard<mutex> lock(_mg);
+		_moves.emplace_back(static_pointer_cast<msg_move>(msg));
     }break;
     // drop other msg.
     }
@@ -210,9 +210,9 @@ void UserAgent::game_draw()
 {
     _sock->game_draw();
 }
-void UserAgent::game_error(const string& msg)
+void UserAgent::game_error()
 {
-    _sock->game_err(msg);
+    _sock->game_err();
 }
 void UserAgent::prev_move(shared_ptr<msg_move> msg)
 {
@@ -224,46 +224,55 @@ shared_ptr<msg_t> UserAgent::next_oper()
     return _sock->rcv_msg();
 }
 
-/*====================Room====================*/
-Room::Room(u32 i, const string& n, const string& p, u32 s,
-		   shared_ptr<UserAgent> owner)
-    : room_t(i, n, p, s), _owner(owner), _owner_chess(CHESS_WHITE)
-{}
 
-Room::~Room()
+/* ==================== Player intfs ==================== */
+int UserAgent::next_move(u64 mid, int& x, int& y)
 {
-    // nothing to do.
+	while(true)
+	{
+		lock_guard<mutex> lock(_mg);
+		if(!_moves.empty()) break;
+		usleep(100000); // sleep 100ms and wait next msg.
+	}
+	lock_guard<mutex> lock(_mg);
+	x = _moves[0]->x;
+	y = _moves[0]->y;
+	_moves.erase(_moves.begin());
+	return S_OK;
 }
 
-string Room::join(shared_ptr<UserAgent> user, const string& psw)
+void UserAgent::enemy_move(int x, int y)
 {
-    // TODO need a lock here
-    if(user == _owner || user == _guest)
-		return "already in room";
-    if(_guest) return "room full";
-    if(psw != this->psw) return "wrong psw";
-    _guest = user;
-    return "";
+	sock()->move(x, y);
 }
 
-u32 Room::leave(shared_ptr<UserAgent> user)
+void UserAgent::game_result(shared_ptr<match_result> rslt)
 {
-    if(user == _guest)
-    {
-		_guest = nullptr;
-		return 1;
-    }
-    if(user == _owner)
-    {
-		if(_guest)
-		{
-			_owner = _guest;
-			_guest = nullptr;
-			// so now, the new owner use another chess type.
-			return 1;
-		}
-		else return 0;
-    }
-    // just return 1 to avoid room destroy
-    return 1;
+	bool is_owner = _room->name == name;
+	switch(rslt->result)
+	{
+	case MATCH_RESULT_DRAW:
+	{
+		sock()->game_draw();
+	} break;
+	case MATCH_RESULT_OWNER_WIN:
+	{
+		if(is_owner) sock()->game_win();
+		else sock()->game_lose();
+	} break;
+	case MATCH_RESULT_GUEST_WIN:
+	{
+		if(is_owner) sock()->game_lose();
+		else sock()->game_win();
+	} break;
+	case MATCH_RESULT_ERROR:
+	{
+		sock()->game_err();
+	} break;
+	}
+}
+
+void UserAgent::notice(u32 stat)
+{
+	sock()->rslt(stat);
 }

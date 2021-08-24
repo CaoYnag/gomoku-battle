@@ -5,6 +5,7 @@
 #include "../utils/msg_sock.h"
 #include "../svr/game.h"
 #include "user_agent.h"
+#include "match_svr.h"
 using namespace std;
 
 /**
@@ -22,6 +23,7 @@ clients can use session field to identify different response for his requests.
 class GameSvr
 {
 protected:
+	shared_ptr<MatchRunner> _runner;
 	shared_ptr<Game> _game;
 	shared_ptr<MsgSock> _svr;
 	int _conn;
@@ -49,11 +51,12 @@ private:
 public:
 	static shared_ptr<GameSvr> get();
 
+	inline shared_ptr<Game> game() { return _game; }
 
 public:
 	/* game intfs */
-	STATUS_CODE register_player(shared_ptr<player_t> player);
-	STATUS_CODE unregister_player(shared_ptr<player_t> player);
+	STATUS_CODE register_player(shared_ptr<Player> player);
+	STATUS_CODE unregister_player(shared_ptr<Player> player);
     STATUS_CODE create_room(const string& player, shared_ptr<room_t> room);
     STATUS_CODE join_room(const string& player, shared_ptr<room_t> room);
     STATUS_CODE exit_room(const string& player, const string& room);
@@ -61,4 +64,5 @@ public:
     STATUS_CODE change_ct(const string& room, const string& player, u32 ct);
     STATUS_CODE change_state(const string& room, const string& player, u32 state);
     STATUS_CODE start_match(const string& room, const string& player);
+	void match_end(shared_ptr<Match> m, shared_ptr<match_result> r);
 };

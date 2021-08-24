@@ -3,6 +3,10 @@
 #include <cstring>
 #include <ctime>
 #include <spdlog/spdlog.h>
+#include <functional>
+#include "../utils/def.h"
+#include "../utils/utils.h"
+#include "game_svr.h"
 #include "def.h"
 using namespace std;
 
@@ -17,6 +21,7 @@ shared_ptr<GameSvr> GameSvr::get()
 GameSvr::GameSvr() : _running(0)
 {
 	_game = make_shared<Game>();
+	_runner = make_shared<MatchRunner>();
 }
 GameSvr::~GameSvr()
 {
@@ -36,7 +41,7 @@ void GameSvr::service()
     while(_running)
     {
         auto cli = _svr->accept_msg_sock();
-        boost::thread(boost::bind(&GameSvr::handle_new_conn, this, cli)).detach();
+		thread(bind(&GameSvr::handle_new_conn, this, cli)).detach();
     }
 }
 
@@ -46,13 +51,13 @@ STATUS_CODE GameSvr::reg(shared_ptr<MsgSock> sock, shared_ptr<msg_reg> msg)
 	// TODO token check and reconnection should be implemented in future.
 
 	auto agent = make_shared<UserAgent>(sock, msg->name);
-	auto s = _game->register_player(static_pointer_cast<player_t>(agent));
+	auto s = _game->register_player(static_pointer_cast<Player>(agent));
 
 	if(s == S_OK)
 	{
 		// success register
 		// generate token, create agent and put into map
-		agent->token(generate_token(sock-ip().c_str(), sock->port()));
+		agent->token(generate_token(sock->ip().c_str(), sock->port()));
 		sock->token(agent->token());
 		_tokens[agent->token()] = agent->name;
 		_conns[agent->name] = agent;
@@ -67,7 +72,7 @@ void GameSvr::handle_new_conn(shared_ptr<MsgSock> sock)
     while(!msg || msg->msg_type != MSG_T_REGISTER)
     {
         if(sock->fail()) break;
-        sock->rslt(RSLT_NEED_REGISTER, "register first.");
+        sock->rslt(S_PLAYER_INVALID);
         msg = sock->rcv_msg(); // TODO maybe need to set timeout here.
     }
 
@@ -80,7 +85,7 @@ void GameSvr::handle_new_conn(shared_ptr<MsgSock> sock)
 
 	auto s = reg(sock, rmsg);
 	msg_result rslt(s);
-	rslt.session = msg.session;
+	rslt.session = msg->session;
 	if(!s) rslt.token = get_agent(rmsg->name)->token();
 	sock->send_msg(rslt);
 	
@@ -102,11 +107,11 @@ void GameSvr::shutdown()
     // release all resource here.
 }
 
-STATUS_CODE GameSvr::register_player(shared_ptr<player_t> player)
+STATUS_CODE GameSvr::register_player(shared_ptr<Player> player)
 {
-	return _game->resiger_player(player);
+	return _game->register_player(player);
 }
-STATUS_CODE GameSvr::unregister_player(shared_ptr<player_t> player)
+STATUS_CODE GameSvr::unregister_player(shared_ptr<Player> player)
 {
 	return _game->unregister_player(player);
 }
@@ -120,8 +125,8 @@ STATUS_CODE GameSvr::join_room(const string& player, shared_ptr<room_t> room)
 	if(s == S_OK)
 	{
 		// notice owner here
-		room = _game->get_room(room->name);
-		get_agent(room->owner)->sock()->room_oper(RI_PLAYER_JOIN, room);
+		room = _game->get_room(room->name)->_room;
+		get_agent(room->owner)->sock()->roominfo(RI_PLAYER_JOIN, *room);
 	}
 	return s;
 }
@@ -130,9 +135,9 @@ STATUS_CODE GameSvr::exit_room(const string& player, const string& room)
 	auto s = _game->exit_room(player, room);
 	if(s == S_OK)
 	{
-		auto r = _game->get_room(room);
+		auto r = _game->get_room(room)->_room;
 		if(r && r->owner != player)
-			get_agent(r->owner)->sock()->room_oper(RI_PLAYER_EXIT, r);
+			get_agent(r->owner)->sock()->roominfo(RI_PLAYER_EXIT, *r);
 	}
 	return s;
 }
@@ -146,8 +151,8 @@ STATUS_CODE GameSvr::change_ct(const string& room, const string& player, u32 ct)
 	if(s == S_OK)
 	{
 		// NOTICE guest
-		auto r = get_room(room);
-		get_agent(r->guest)->sock()->room_oper(RI_PLAYER_CHESS, r);
+		auto r = _game->get_room(room)->_room;
+		get_agent(r->guest)->sock()->roominfo(RI_PLAYER_CHESS, *r);
 	}
 	return s;
 }
@@ -156,8 +161,8 @@ STATUS_CODE GameSvr::change_state(const string& room, const string& player, u32 
 	auto s = _game->change_state(room, player, state);
 	if(s == S_OK)
 	{
-		auto r = get_room(room);
-		get_agent(r->owner)->sock()->room_oper(RI_PLAYER_STATE, r);
+		auto r = _game->get_room(room)->_room;
+		get_agent(r->owner)->sock()->roominfo(RI_PLAYER_STATE, *r);
 	}
 	return s;
 }
@@ -166,8 +171,40 @@ STATUS_CODE GameSvr::start_match(const string& room, const string& player)
 	auto s = _game->start_match(room, player);
 	if(s == S_OK)
 	{
-		// TODO how to notice another player?
+		auto m = _game->get_match(room);
+		get_agent(m->room()->_room->owner)->sock()->game_start();
+		get_agent(m->room()->_room->guest)->sock()->game_start();
+		_runner->new_match(m);
 	}
+	
 	return s;
 }
+void GameSvr::match_end(shared_ptr<Match> m, shared_ptr<match_result> r)
+{
+	_game->match_ovr(m, r);
+	// notice players here
+	auto owner = get_agent(m->room()->_room->owner);
+	auto guest = get_agent(m->room()->_room->guest);
+	if(r->result == MATCH_RESULT_OWNER_WIN)
+	{
+		owner->sock()->game_win();
+		guest->sock()->game_lose();
+	}
+	else if(r->result == MATCH_RESULT_GUEST_WIN)
+	{
+		owner->sock()->game_lose();
+		guest->sock()->game_win();
+	}
+	else if(r->result == MATCH_RESULT_DRAW)
+	{
+		owner->sock()->game_draw();
+		owner->sock()->game_draw();
+	}
+	else
+	{
+		// error
+		owner->sock()->game_err();
+		guest->sock()->game_err();
+	}
 
+}

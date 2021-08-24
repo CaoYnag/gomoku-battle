@@ -16,17 +16,27 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+class VoidUser : public Player
+{
+public:
+	VoidUser(const string& name) : Player(0, name, "", 0) {}
+	int next_move(u64 mid, int& x, int& y) { return S_OK; }
+	void enemy_move(int x, int y) {}
+	void game_result(shared_ptr<match_result> rslt) {}
+	void notice(u32 stat) {}
+};
+
 BOOST_AUTO_TEST_CASE(test_game)
 {
 	auto game = make_shared<Game>();
 
     // Register
-	BOOST_REQUIRE_EQUAL(S_PLAYER_INVALID_META, game->register_player(make_shared<player_t>("")));
-	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<player_t>("player1")));
-	BOOST_REQUIRE_EQUAL(S_PLAYER_EXISTS, game->register_player(make_shared<player_t>("player1")));
-	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<player_t>("player2")));
-	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<player_t>("player3")));
-	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<player_t>("player4")));
+	BOOST_REQUIRE_EQUAL(S_PLAYER_INVALID_META, game->register_player(make_shared<VoidUser>("")));
+	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<VoidUser>("player1")));
+	BOOST_REQUIRE_EQUAL(S_PLAYER_EXISTS, game->register_player(make_shared<VoidUser>("player1")));
+	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<VoidUser>("player2")));
+	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<VoidUser>("player3")));
+	BOOST_REQUIRE_EQUAL(S_OK, game->register_player(make_shared<VoidUser>("player4")));
 	BOOST_REQUIRE(game->get_player("player1") && game->get_player("player2") && game->get_player("player3"));
 	// now active player: player1 player2 player3 player4
 
@@ -61,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_game)
 	// now room: room2(player3)
 	
 	// Unregister
-	BOOST_REQUIRE_EQUAL(S_PLAYER_INVALID, game->unregister_player(make_shared<player_t>("playern")));
-	BOOST_REQUIRE_EQUAL(S_PLAYER_BUSY, game->unregister_player(make_shared<player_t>("player3")));
-	BOOST_REQUIRE_EQUAL(S_OK, game->unregister_player(make_shared<player_t>("player1")));
+	BOOST_REQUIRE_EQUAL(S_PLAYER_INVALID, game->unregister_player(make_shared<VoidUser>("playern")));
+	BOOST_REQUIRE_EQUAL(S_PLAYER_BUSY, game->unregister_player(make_shared<VoidUser>("player3")));
+	BOOST_REQUIRE_EQUAL(S_OK, game->unregister_player(make_shared<VoidUser>("player1")));
 }

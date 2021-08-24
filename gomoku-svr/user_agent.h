@@ -1,7 +1,8 @@
 #pragma once
+#include "../svr/player.h"
 #include "../utils/msg_sock.h"
 
-class UserAgent : public player_t
+class UserAgent : public Player
 {
 protected:
     shared_ptr<MsgSock> _sock;
@@ -10,6 +11,9 @@ protected:
     u32 _chesstype;
     u64 _token;
     shared_ptr<room_t> _room;
+
+	mutex _mg;
+	vector<shared_ptr<msg_move>> _moves;
 protected:
 	/* states */
     int idle(shared_ptr<msg_t> msg);
@@ -42,9 +46,15 @@ public:
     void game_win();
     void game_lose();
     void game_draw();
-    void game_error(const string& msg);
+    void game_error();
     void prev_move(shared_ptr<msg_move> msg);
 public:
     /* some sync oper */
     shared_ptr<msg_t> next_oper();
+public:
+	/* Player Intfs */
+	int next_move(u64 mid, int& x, int& y);
+	void enemy_move(int x, int y);
+	void game_result(shared_ptr<match_result> rslt);
+	void notice(u32 stat);
 };

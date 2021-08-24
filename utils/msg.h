@@ -15,8 +15,7 @@ constexpr const u32 MSG_T_RESULT     = 0x1;
 constexpr const u32 MSG_T_REQUEST    = 0x2;
 constexpr const u32 MSG_T_REGISTER   = 0x3;
 constexpr const u32 MSG_T_ROOM_LIST  = 0x4;
-constexpr const u32 MSG_T_ROOM_OPER  = 0x5;
-constexpr const u32 MSG_T_ROOM_INFO  = 0x6;
+constexpr const u32 MSG_T_ROOM		 = 0x5;
 constexpr const u32 MSG_T_CHESS      = 0x7;
 constexpr const u32 MSG_T_STATE      = 0x8;
 constexpr const u32 MSG_T_GAME       = 0x9;
@@ -92,17 +91,6 @@ struct msg_roomlist : public msg_t
     msg_roomlist(const vector<room_t>& rooms);
 };
 
-struct msg_room_oper : public msg_t
-{
-    RTTR_ENABLE(msg_t)
-    public:
-    u32 type;       // create/join
-    room_t room;
-
-    msg_room_oper();
-    msg_room_oper(u32 t, const room_t& r);
-};
-
 /* 
  * player join or exit
  * player change ct or state
@@ -114,15 +102,15 @@ enum ROOM_INFO
 	RI_PLAYER_STATE,
 	RI_PLAYER_CHESS
 };
-struct msg_room_info : public msg_t
+struct msg_room : public msg_t
 {
     RTTR_ENABLE(msg_t)
     public:
     u32 type;
     room_t room;
 
-    msg_room_info();
-    msg_room_info(u32 t, const room_t& r);
+    msg_room();
+    msg_room(u32 t, const room_t& r);
 };
 
 /* choose chess type */
@@ -158,12 +146,10 @@ struct msg_game : public msg_t
     RTTR_ENABLE(msg_t)
     public:
     u32 state;
-    u32 ex;
-    string message;
+    u64 ex;
 
     msg_game();
-    msg_game(u32 s, u32 e);
-    msg_game(u32 s, u32 e, const string& m);
+    msg_game(u32 s, u64 e);
 };
 
 struct msg_move : public msg_t
@@ -210,8 +196,7 @@ shared_ptr<msg_request> unpack_request(const msg_raw_t& raw);
 shared_ptr<msg_reg> unpack_reg(const msg_raw_t& raw);
 shared_ptr<msg_unreg> unpack_unreg(const msg_raw_t& raw);
 shared_ptr<msg_roomlist> unpack_roomlist(const msg_raw_t& raw);
-shared_ptr<msg_room_oper> unpack_roomoper(const msg_raw_t& raw);
-shared_ptr<msg_room_info> unpack_roominfo(const msg_raw_t& raw);
+shared_ptr<msg_room> unpack_room(const msg_raw_t& raw);
 shared_ptr<msg_chess> unpack_chess(const msg_raw_t& raw);
 shared_ptr<msg_state> unpack_state(const msg_raw_t& raw);
 shared_ptr<msg_game> unpack_game(const msg_raw_t& raw);
@@ -220,6 +205,19 @@ shared_ptr<msg_move> unpack_move(const msg_raw_t& raw);
 
 RTTR_REGISTRATION
 {
+	registration::class_<match_result>("MatchResult")
+		.constructor<>()
+		.property("begin", &match_result::begin)
+		.property("end", &match_result::end)
+		.property("steps", &match_result::steps)
+		.property("result", &match_result::result);
+	registration::class_<player_records>("PlayerRec")
+		.constructor<>()
+		.property("player", &player_records::player)
+		.property("name", &player_records::total)
+		.property("win", &player_records::win)
+		.property("lose", &player_records::lose)
+		.property("avg_step", &player_records::avg_step);
     registration::class_<player_t>("Player")
 		.constructor<>()
 		.property("id", &player_t::id)
@@ -258,14 +256,10 @@ RTTR_REGISTRATION
     registration::class_<msg_roomlist>("RoomList")
 		.constructor<>()
 		.property("rooms", &msg_roomlist::rooms);
-    registration::class_<msg_room_oper>("RoomOper")
+    registration::class_<msg_room>("RoomInfo")
 		.constructor<>()
-		.property("type", &msg_room_oper::type)
-		.property("room", &msg_room_oper::room);
-    registration::class_<msg_room_info>("RoomInfo")
-		.constructor<>()
-		.property("type", &msg_room_info::type)
-		.property("room", &msg_room_info::room);
+		.property("type", &msg_room::type)
+		.property("room", &msg_room::room);
     registration::class_<msg_chess>("Chess")
 		.constructor<>()
 		.property("type", &msg_chess::type);
@@ -275,8 +269,7 @@ RTTR_REGISTRATION
     registration::class_<msg_game>("Game")
 		.constructor<>()
 		.property("state", &msg_game::state)
-		.property("ex", &msg_game::ex)
-		.property("message", &msg_game::message);
+		.property("ex", &msg_game::ex);
     registration::class_<msg_move>("Move")
 		.constructor<>()
 		.property("chess", &msg_move::chess)

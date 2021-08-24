@@ -23,11 +23,8 @@ msg_unreg::msg_unreg() : msg_t(MSG_T_UNREGISTER) {}
 msg_roomlist::msg_roomlist() : msg_t(MSG_T_ROOM_LIST) {}
 msg_roomlist::msg_roomlist(const vector<room_t>& rms) : msg_t(MSG_T_ROOM_LIST), rooms(rms) {}
 
-msg_room_oper::msg_room_oper() : msg_t(MSG_T_ROOM_OPER) {}
-msg_room_oper::msg_room_oper(u32 t, const room_t& r) : msg_t(MSG_T_ROOM_OPER), type(t), room(r) {}
-
-msg_room_info::msg_room_info() : msg_t(MSG_T_ROOM_INFO) {}
-msg_room_info::msg_room_info(u32 t, const room_t& r) : msg_t(MSG_T_ROOM_INFO), type(t), room(r) {}
+msg_room::msg_room() : msg_t(MSG_T_ROOM) {}
+msg_room::msg_room(u32 t, const room_t& r) : msg_t(MSG_T_ROOM), type(t), room(r) {}
 
 msg_chess::msg_chess() : msg_t(MSG_T_CHESS) {}
 msg_chess::msg_chess(u32 t) : msg_t(MSG_T_CHESS), type(t) {}
@@ -36,8 +33,7 @@ msg_state::msg_state() : msg_t(MSG_T_STATE) {}
 msg_state::msg_state(u32 s) : msg_t(MSG_T_STATE), state(s) {}
 
 msg_game::msg_game() : msg_t(MSG_T_GAME) {}
-msg_game::msg_game(u32 s, u32 e) : msg_t(MSG_T_GAME), state(s), ex(e) {}
-msg_game::msg_game(u32 s, u32 e, const string& m) : msg_t(MSG_T_GAME), state(s), ex(e), message(m) {}
+msg_game::msg_game(u32 s, u64 e) : msg_t(MSG_T_GAME), state(s), ex(e) {}
 
 msg_move::msg_move() : msg_t(MSG_T_MOVE) {}
 msg_move::msg_move(u32 xx, u32 yy) : msg_t(MSG_T_MOVE), x(xx), y(yy) {}
@@ -94,16 +90,9 @@ shared_ptr<msg_roomlist> unpack_roomlist(const msg_raw_t& raw)
     if(s) return nullptr;
     return ret;
 }
-shared_ptr<msg_room_oper> unpack_roomoper(const msg_raw_t& raw)
+shared_ptr<msg_room> unpack_room(const msg_raw_t& raw)
 {
-    auto ret = make_shared<msg_room_oper>();
-    int s = unpack(raw, *ret);
-    if(s) return nullptr;
-    return ret;
-}
-shared_ptr<msg_room_info> unpack_roominfo(const msg_raw_t& raw)
-{
-    auto ret = make_shared<msg_room_info>();
+    auto ret = make_shared<msg_room>();
     int s = unpack(raw, *ret);
     if(s) return nullptr;
     return ret;

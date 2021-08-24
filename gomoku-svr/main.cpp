@@ -1,12 +1,14 @@
 #include <iostream>
+#include <signal.h>
+#include <unistd.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include "spdlog/sinks/syslog_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 // user defined types logging by implementing operator<<
 #include "spdlog/fmt/ostr.h" // must be included
+#include "game_svr.h"
 #include "def.h"
-#include "server.h"
 using namespace std;
 
 
@@ -24,6 +26,11 @@ void init_log()
     spdlog::set_default_logger(std::make_shared<spdlog::logger>(logger)); 
 }
 
+void term_svr(int sig)
+{
+	GameSvr::get()->shutdown();
+}
+
 int main(int argc, char* argv[])
 {
     const char* conf_path = "svr.conf.json";
@@ -36,9 +43,20 @@ int main(int argc, char* argv[])
         spdlog::error("error init configuraion, exiting...");
         return 1;
     }
-    auto svr = Server::get();
+    auto svr = GameSvr::get();
     svr->init();
+
+	// reg sig handle before run svr.
+	{
+		struct sigaction act;
+		act.sa_flags = 0;
+		act.sa_handler = term_svr;
+		sigemptyset(&act.sa_mask);
+		sigaction(SIGTERM, &act, NULL);
+	}
+	
     svr->service();
+	svr->shutdown();
     
     return 0;
 }

@@ -3,7 +3,7 @@
 using namespace std;
 
 /*====================Room====================*/
-Room::Room(shared_ptr<room_t> room, shared_ptr<player_t> owner)
+Room::Room(shared_ptr<room_t> room, shared_ptr<Player> owner)
     : _room(room), _owner(owner), _guest(nullptr)
 {
     _owner->state = PLAYER_STATE_OWNER;
@@ -16,7 +16,7 @@ Room::~Room()
     // nothing to do.
 }
 
-STATUS_CODE Room::join(shared_ptr<player_t> user, const string& psw)
+STATUS_CODE Room::join(shared_ptr<Player> user, const string& psw)
 {
 	lock_guard<mutex> lock(_guard);
     if(user == _owner || user == _guest)
@@ -31,7 +31,7 @@ STATUS_CODE Room::join(shared_ptr<player_t> user, const string& psw)
     return S_OK;
 }
 
-STATUS_CODE Room::leave(shared_ptr<player_t> user)
+STATUS_CODE Room::leave(shared_ptr<Player> user)
 {
 	lock_guard<mutex> lock(_guard);
     if(user == _guest)
@@ -62,7 +62,7 @@ STATUS_CODE Room::leave(shared_ptr<player_t> user)
 	return S_ROOM_ILLEGAL_OPER; // not in roow
 }
 
-STATUS_CODE Room::change_ct(shared_ptr<player_t> user, u32 ct)
+STATUS_CODE Room::change_ct(shared_ptr<Player> user, u32 ct)
 {
 	if(user != _owner) return S_ROOM_ILLEGAL_OPER;
 	if(ct != CHESS_BLACK && ct != CHESS_WHITE) return S_ROOM_ILLEGAL_OPER;
@@ -70,7 +70,7 @@ STATUS_CODE Room::change_ct(shared_ptr<player_t> user, u32 ct)
 	return S_OK;
 }
 
-STATUS_CODE Room::change_state(shared_ptr<player_t> user, u32 state)
+STATUS_CODE Room::change_state(shared_ptr<Player> user, u32 state)
 {
 	if(user != _guest) return S_ROOM_ILLEGAL_OPER;
 	if(state != PLAYER_STATE_PREPARE && state != PLAYER_STATE_READY)

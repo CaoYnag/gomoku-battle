@@ -10,7 +10,7 @@ Game::Game()
 Game::~Game()
 {}
 
-void Game::add_player(shared_ptr<player_t> player)
+void Game::add_player(shared_ptr<Player> player)
 {
 	player->id = gen_id();
 	player->state = PLAYER_STATE_IDLE;
@@ -22,7 +22,7 @@ void Game::rm_player(const string& name)
 {
     // TODO complete this later.
 	auto it = find_if(_players.begin(), _players.end(),
-					  [&](const shared_ptr<player_t>& p){ return p->name == name; });
+					  [&](const shared_ptr<Player>& p){ return p->name == name; });
 	if(it != _players.end())
 		_players.erase(it);
 	_pmap.erase(name);
@@ -42,7 +42,7 @@ void Game::rm_room(const string& name)
 	_rmap.erase(name);
 }
 
-bool Game::player_check(shared_ptr<player_t> player)
+bool Game::player_check(shared_ptr<Player> player)
 {
     if(player->name.length() <= 0 || player->name.length() >= 36)
 		throw runtime_error("name length out of range.");
@@ -68,7 +68,7 @@ u32 Game::gen_id()
 }
 
 
-STATUS_CODE Game::register_player(shared_ptr<player_t> player)
+STATUS_CODE Game::register_player(shared_ptr<Player> player)
 {
     try{player_check(player);}
 	catch(exception& e)
@@ -87,7 +87,7 @@ STATUS_CODE Game::register_player(shared_ptr<player_t> player)
     return S_OK;
 }
 
-STATUS_CODE Game::unregister_player(shared_ptr<player_t> player)
+STATUS_CODE Game::unregister_player(shared_ptr<Player> player)
 {
 	lock_guard<mutex> lock(_reg_guard);
 	if(_pmap.count(player->name))
@@ -154,7 +154,6 @@ STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 		spdlog::debug("player {} already joined other room.", player);
 		return S_PLAYER_BUSY;
 	}
-    lock_guard<mutex> lock(target->_guard);
 	return target->join(p, room->psw);
 }
 
@@ -172,7 +171,6 @@ STATUS_CODE Game::exit_room(const string& player, const string& room)
 		spdlog::debug("error exit room {}: player {} not exists.", r->_room->name, player);
 		return S_PLAYER_INVALID;
 	}
-    lock_guard<mutex> lock(r->_guard);
 	auto ret = r->leave(p);
 	if(ret == S_ROOM_EMPTY)
 	{
@@ -218,31 +216,76 @@ STATUS_CODE Game::change_state(const string& room,
 	return r->change_state(p, state);
 }
 
+
+
 STATUS_CODE Game::start_match(const string& room, const string& player)
 {
     auto r = get_room(room);
     auto p = get_player(player);
     if(!r)
-	throw runtime_error("room not exists.");
-    if(!p || p != r->_owner)
-    	throw runtime_error("player not exists or not room owner.");    
+	{
+		spdlog::debug("{} start game in room {} failed: room not exists.", player, room);
+		return S_ROOM_NOT_EXISTS;
+			}
+    if(p != r->_owner)
+	{
+		spdlog::debug("{} start game in room {} failed: player not exists.", player, room);
+		return S_PLAYER_INVALID;
+	}
+	if(p != r->_owner)
+	{
+		spdlog::debug("{} start game in room {} failed: player not room owner.", player, room);
+		return S_ROOM_ILLEGAL_OPER;
+	}
     if(!r->_guest || r->_guest->state != PLAYER_STATE_READY)
-	throw runtime_error("guest not exists or not ready.");
-    lock_guard<mutex> lock(r->_guard);
+	{
+		spdlog::debug("start game in room {} failed: guest not exists or not ready.", player);
+		return S_ROOM_ILLEGAL_OPER;
+	}
+
+    lock_guard<mutex> lock(r->_guard); // TODO should not room's lock in Game.
     r->_room->state = ROOM_STATE_MATCH;
-    //return make_shared<Match>(r);
+    auto m = make_shared<Match>(r);
+	if(!m)
+	{
+		spdlog::debug("start match in {} failed.", room);
+		return S_ERROR;
+	}
+	_mmap[room] = m;
 	return S_OK;
 }
 
-void Game::match_ovr(shared_ptr<Match> m)
+void Game::match_ovr(shared_ptr<Match> m, shared_ptr<match_result> result)
 {
-    if(m->end())
-    {
-	auto r = m->room();
-	lock_guard<mutex> lock(r->_guard);
-	r->_room->state = ROOM_STATE_FULL;
-	r->_guest->state = PLAYER_STATE_PREPARE;
+    if(result)
+	{
+		// update stats here
+		switch(result->result)
+		{
+		case MATCH_RESULT_DRAW:
+		{
+			m->room()->_owner->stats()->game_draw(result->steps);
+			m->room()->_guest->stats()->game_draw(result->steps);
+		}break;
+		case MATCH_RESULT_OWNER_WIN:
+		{
+			m->room()->_owner->stats()->game_win(result->steps);
+			m->room()->_guest->stats()->game_lose(result->steps);
+		}break;
+		case MATCH_RESULT_GUEST_WIN:
+		{
+			m->room()->_owner->stats()->game_lose(result->steps);
+			m->room()->_guest->stats()->game_win(result->steps);
+		}break;
+		default: // error
+		{}break;
+		}
+	}
 
-	// TODO record stats in future.
-    }
+	// remove from mmap
+	_mmap.erase(m->room()->_room->name);
+	// recover room and player state?
+	auto r = m->room();
+	r->change_state(r->_guest, PLAYER_STATE_PREPARE);
+	r->_room->state = ROOM_STATE_FULL;
 }

@@ -30,7 +30,7 @@ void info(msg_roomlist& msg)
 		cout << room.id << " " << room.name << " " << room.psw << " " << room.state << endl;
     }
 }
-void info(msg_room_oper& msg)
+void info(msg_room& msg)
 {
     cout << "oper: " << (int)msg.type << " " << msg.room.name << " " << msg.room.psw << endl;
 }
@@ -155,12 +155,12 @@ BOOST_AUTO_TEST_CASE(test_msg_roomlist)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_msg_room_oper)
+BOOST_AUTO_TEST_CASE(test_msg_room)
 {
     {
-		msg_room_oper msg(0, room_t(0, "name", "psw"));
+		msg_room msg(0, room_t(0, "name", "psw"));
 		auto raw = pack(msg);
-		auto rslt = unpack_roomoper(raw);
+		auto rslt = unpack_room(raw);
 		info(raw);
 		info(*rslt);
 		BOOST_REQUIRE_EQUAL(msg.type, rslt->type);

@@ -19,10 +19,11 @@ if(WIN32)
 endif()
 
 set(SRC
+  	${PROJECT_SOURCE_DIR}/def.cpp
     ${PROJECT_SOURCE_DIR}/user_agent.cpp
     ${PROJECT_SOURCE_DIR}/game_svr.cpp
     ${PROJECT_SOURCE_DIR}/match_svr.cpp
-    ${PROJECT_SOURCE_DIR}/svr.cpp
+    # ${PROJECT_SOURCE_DIR}/svr.cpp
     ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
