@@ -38,10 +38,12 @@ int GameSvr::init()
 
 void GameSvr::service()
 {
+	_running = 1;
     while(_running)
     {
         auto cli = _svr->accept_msg_sock();
-		thread(bind(&GameSvr::handle_new_conn, this, cli)).detach();
+		if(cli)
+			thread(bind(&GameSvr::handle_new_conn, this, cli)).detach();
     }
 }
 
@@ -103,7 +105,7 @@ void GameSvr::release_conn(shared_ptr<MsgSock> sock)
 
 void GameSvr::shutdown()
 {
-    _running = false;
+    _running = 0;
     // release all resource here.
 }
 

@@ -28,6 +28,7 @@ void init_log()
 
 void term_svr(int sig)
 {
+	spdlog::info("rcv int sig, interupting svr...");
 	GameSvr::get()->shutdown();
 }
 
@@ -52,7 +53,7 @@ int main(int argc, char* argv[])
 		act.sa_flags = 0;
 		act.sa_handler = term_svr;
 		sigemptyset(&act.sa_mask);
-		sigaction(SIGTERM, &act, NULL);
+		sigaction(SIGINT, &act, NULL);
 	}
 	
     svr->service();

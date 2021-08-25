@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(gomoku-server)
+project(gomoku-cc)
 
 if(WIN32)
 	if($ENV{LIB_BASE})
@@ -19,19 +19,14 @@ if(WIN32)
 endif()
 
 set(SRC
-    ${PROJECT_SOURCE_DIR}/room.cpp
     ${PROJECT_SOURCE_DIR}/user_agent.cpp
-    ${PROJECT_SOURCE_DIR}/game_svr.cpp
-    ${PROJECT_SOURCE_DIR}/match_server.cpp
-    ${PROJECT_SOURCE_DIR}/game.cpp
-    ${PROJECT_SOURCE_DIR}/svr.cpp
     ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
-add_executable(server ${SRC})
-target_link_libraries(server utils boost_thread)
+add_executable(ccli ${SRC})
+target_link_libraries(cli utils cli)
 if(WIN32)
 endif()
 if(UNIX)
-	target_link_libraries(server pthread)
+	target_link_libraries(ccli pthread)
 endif()
