@@ -17,13 +17,13 @@ cmd_join_room::cmd_join_room(const string& n) : cmd_t(CMD_JOIN_ROOM), name(n), p
 cmd_join_room::cmd_join_room(const string& n, const string& p) : cmd_t(CMD_JOIN_ROOM), name(n), psw(p)
 {}
 
-cmd_exit_room::cmd_exit_room(const string& n) : cmd_t(CMD_EXIT_ROOM), name(n), psw("")
+cmd_exit_room::cmd_exit_room() : cmd_t(CMD_EXIT_ROOM)
 {}
 
-cmd_ct::cmd_ct(int t) : cmd_t(CMD_ROOM_CHESSTYPE), ct(c)
+cmd_ct::cmd_ct() : cmd_t(CMD_ROOM_CHESSTYPE)
 {}
 
-cmd_state::cmd_state(int s) : cmd_t(CMD_ROOM_STATE), state(s)
+cmd_state::cmd_state() : cmd_t(CMD_ROOM_STATE)
 {}
 
 cmd_match::cmd_match() : cmd_t(CMD_START_MATCH)
@@ -38,10 +38,17 @@ cmd_unreg::cmd_unreg() : cmd_t(CMD_UNREGISTER)
 cmd_exit::cmd_exit() : cmd_t(CMD_EXIT)
 {}
 
+cmd_help::cmd_help(int t) : cmd_t(CMD_HELP), type(t)
+{}
 
-shared_ptr<cmd_t> parse_cmd(const string& cmd)
-{
-	vector<string> tokens;
-	// 1. tokenize
-	auto pos = cmd.find();
-}
+cmd_stat::cmd_stat() : cmd_t(CMD_STAT)
+{}
+
+cmd_board::cmd_board() : cmd_t(CMD_BOARD)
+{}
+
+cmd_ping::cmd_ping() : cmd_t(CMD_PING)
+{}
+
+cmd_reg::cmd_reg(const string& n) : cmd_t(CMD_REGISTER), name(n)
+{}

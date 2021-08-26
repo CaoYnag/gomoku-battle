@@ -19,12 +19,15 @@ if(WIN32)
 endif()
 
 set(SRC
-    ${PROJECT_SOURCE_DIR}/user_agent.cpp
+    ${PROJECT_SOURCE_DIR}/cmds.cpp
+    ${PROJECT_SOURCE_DIR}/cmd_io.cpp
+    ${PROJECT_SOURCE_DIR}/csh.cpp
+	${PROJECT_SOURCE_DIR}/user_agent.cpp
     ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
 add_executable(ccli ${SRC})
-target_link_libraries(cli utils cli)
+target_link_libraries(ccli utils spes)
 if(WIN32)
 endif()
 if(UNIX)

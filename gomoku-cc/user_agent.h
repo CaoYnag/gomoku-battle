@@ -1,60 +1,45 @@
 #pragma once
-#include "../svr/player.h"
 #include "../utils/msg_sock.h"
+#include <functional>
+#include <map>
+#include <mutex>
+using namespace std;
 
-class UserAgent : public Player
+typedef function<void()> msg_callback;
+
+class UserAgent : public MsgSock
 {
 protected:
-    shared_ptr<MsgSock> _sock;
+    shared_ptr<player_t> _player;
+    shared_ptr<room_t> _room;
     u32 _state;
-    u32 _type;
     u32 _chesstype;
     u64 _token;
-    shared_ptr<room_t> _room;
 
-	mutex _mg;
-	vector<shared_ptr<msg_move>> _moves;
-protected:
-	/* states */
-    int idle(shared_ptr<msg_t> msg);
-    int room(shared_ptr<msg_t> msg);
-    int game(shared_ptr<msg_t> msg);
-	
-    int rslt(u32 code, const string& msg = "");
+	mutex _session_guard;
+	map<u64, msg_callback> _sessions;
 public:
-	UserAgent(shared_ptr<MsgSock> sock, const string& name);
+	UserAgent();
     virtual ~UserAgent();
 
-    /* 
-	 * main loop
-	 * handle msgs
-	 * util close conn 
-	 */
-    void mainloop();
+	inline shared_ptr<player_t> player() { return _player; }
+	inline shared_ptr<room_t> room() { return _room; };
+public:
+	/* player operations */
+	shared_ptr<player_t> reg(const string& name);
+	u32 unreg();
 
-    inline u64 token() { return _token; }
-	inline void token(u64 t) { _token = t; }
-	inline shared_ptr<MsgSock> sock() { return _sock; }
-public:
-    /* some callbacks */
-    /* set player chess type */
-    void changechess(u32 type);
-    /* user join/exit */
-    void roominfo(u32 type, const string& name);
-    /* game infos */
-    void game_start();
-    void game_win();
-    void game_lose();
-    void game_draw();
-    void game_error();
-    void prev_move(shared_ptr<msg_move> msg);
-public:
-    /* some sync oper */
-    shared_ptr<msg_t> next_oper();
-public:
-	/* Player Intfs */
-	int next_move(u64 mid, int& x, int& y);
-	void enemy_move(int x, int y);
-	void game_result(shared_ptr<match_result> rslt);
-	void notice(u32 stat);
+	u32 create_room(shared_ptr<room_t>);
+	u32 join_room(shared_ptr<room_t>);
+	u32 exit_room();
+	u32 change_chess(u32 type);
+	u32 change_state(u32 state);
+	u32 start_match();
+	u32 move(int x,  int y);
+
+
+	/* handle msg from svr. */
+	void msg_proc();
+	/* handle msg */
+	void on_msg(shared_ptr<msg_t>);
 };
