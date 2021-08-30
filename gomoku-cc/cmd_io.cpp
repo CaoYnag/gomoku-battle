@@ -13,6 +13,7 @@ const string CMDS[] =
 	"conn",
 	"reg",
 	"unreg",
+	"rl",
 	"rc",
 	"rj",
 	"rq",
@@ -101,8 +102,10 @@ shared_ptr<cmd_t> parse_ping(vector<string>& tokens)
 }
 shared_ptr<cmd_t> parse_connect(vector<string>& tokens)
 {
-	// TODO
-	return nullptr;
+	if(tokens.size() < 3) throw cmd_parse_except("ip and port needed.");
+	string ip = tokens[1];
+	int port = my_atoi(tokens[2]);
+	return make_shared<cmd_connect>(ip, port);
 }
 shared_ptr<cmd_t> parse_register(vector<string>& tokens)
 {
@@ -156,6 +159,10 @@ shared_ptr<cmd_t> parse_board(vector<string>& tokens)
 {
 	return make_shared<cmd_board>();
 }
+shared_ptr<cmd_t> parse_room_list(vector<string>& tokens)
+{
+	return make_shared<cmd_room_list>();
+}
 
 cmd_parse_foo CMD_PARSE_FOOS[] =
 {
@@ -166,6 +173,7 @@ cmd_parse_foo CMD_PARSE_FOOS[] =
 	parse_connect,
 	parse_register,
 	parse_unreg,
+	parse_room_list,
 	parse_create_room,
 	parse_join_room,
 	parse_exit_room,

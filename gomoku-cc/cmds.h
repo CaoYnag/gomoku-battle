@@ -16,6 +16,7 @@ enum CMD_TYPE
 	CMD_REGISTER,
 	CMD_UNREGISTER,
 
+	CMD_ROOM_LIST,
 	CMD_CREATE_ROOM,
 	CMD_JOIN_ROOM,
 	CMD_EXIT_ROOM,
@@ -106,6 +107,7 @@ struct cmd_move : public cmd_t
 	cmd_move(int x, int y);
 };
 
+PURE_CMD(cmd_room_list)
 PURE_CMD(cmd_exit_room)
 PURE_CMD(cmd_ct)
 PURE_CMD(cmd_state)

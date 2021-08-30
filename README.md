@@ -186,6 +186,31 @@ when room owner snd a `msg_game` to svr. svr generate a match from the room, and
 maybe i will really seperate match server and game server in future.
 but, not now. when i need a distributed svr, maybe i will do that.
 
+##### cui client
+
+##### single thread
+
+client
+|
+| connect
+| register
+|
+idle <--------------|
+|------------       |
+|   |   |   |       |
+|cr |jr |rl |ri     |
+|   |   |   |       |
+o<- g<- -------------
+| | | |
+|ct |st
+
+...
+
+may cause some problems.
+
+##### msg callback
+
+
 ### Message Defination
 
 all msg would be serialized in json format, and wrap with `<>`.

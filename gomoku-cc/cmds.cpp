@@ -52,3 +52,6 @@ cmd_ping::cmd_ping() : cmd_t(CMD_PING)
 
 cmd_reg::cmd_reg(const string& n) : cmd_t(CMD_REGISTER), name(n)
 {}
+
+cmd_room_list::cmd_room_list() : cmd_t(CMD_ROOM_LIST)
+{}

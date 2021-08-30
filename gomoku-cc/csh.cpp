@@ -1,7 +1,7 @@
 #include "csh.h"
 #include "cmd_io.h"
 
-Csh::Csh()
+Csh::Csh() : _os(cout), _ua(_os)
 {}
 
 Csh::~Csh()
