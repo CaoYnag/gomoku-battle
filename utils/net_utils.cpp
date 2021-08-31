@@ -108,6 +108,11 @@ void TcpSock::close()
 
 int TcpSock::listen(int conn)
 {
+	if(!_sock)
+	{
+		spdlog::error("calling listen without init socket!");
+		return 1;
+	}
     int ret = ::listen(_sock, SOMAXCONN);
     if(ret) return ret;
     spdlog::info("server listening on [{}:{}].", _ip.empty() ? "" : _ip, _port);
@@ -116,6 +121,11 @@ int TcpSock::listen(int conn)
 
 int TcpSock::connect(const string& ip, int port)
 {
+	if(!_sock)
+	{
+		spdlog::error("calling connect without init socket!");
+		return 1;
+	}
     sockaddr_in remote;
     memset(&remote, 0, sizeof(remote));
     remote.sin_family = AF_INET;
@@ -124,12 +134,17 @@ int TcpSock::connect(const string& ip, int port)
 
     int ret = ::connect(_sock, (sockaddr*)&remote, sizeof(remote));
     if(ret)
-        spdlog::error("error connecting to {}:{}", ip, port);
+        spdlog::error("error connecting to {}:{} {}", ip, port, strerror(ret));
     return ret;
 }
 
 shared_ptr<TcpSock> TcpSock::accept()
 {
+	if(!_sock)
+	{
+		spdlog::error("calling accept without init socket!");
+		return nullptr;
+}	
     socklen_t len = sizeof(sockaddr_in);
     sockaddr_in addr;
     SOCK sock = ::accept(_sock, (sockaddr*)&addr, &len);
@@ -140,11 +155,21 @@ shared_ptr<TcpSock> TcpSock::accept()
 
 int TcpSock::send(const string& data)
 {
+	if(!_sock)
+	{
+		spdlog::error("calling send without init socket!");
+		return 1;
+	}
     return ::send(_sock, data.c_str(), data.length(), MSG_NOSIGNAL); //MSG_NOSIGNAL
 }
 
 string TcpSock::recv(int buff_len)
 {
+	if(!_sock)
+	{
+		spdlog::error("calling recv without init socket!");
+		return "";
+	}
     char buff[buff_len];
     int n = ::recv(_sock, buff, buff_len, 0);
     if(n <= 0)

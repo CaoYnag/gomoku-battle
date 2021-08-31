@@ -6,7 +6,7 @@ using namespace std;
 enum CMD_TYPE
 {
 	/* cmd operation */
-	CMD_HELP,
+	CMD_HELP = 0,
 	CMD_EXIT,
 	CMD_STAT,
 	CMD_PING,

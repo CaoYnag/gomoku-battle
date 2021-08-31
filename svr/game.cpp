@@ -84,6 +84,7 @@ STATUS_CODE Game::register_player(shared_ptr<Player> player)
 		return S_PLAYER_EXISTS;
 	}
     add_player(player);
+	spdlog::info("registered player: {}", player->name);
     return S_OK;
 }
 
@@ -96,6 +97,7 @@ STATUS_CODE Game::unregister_player(shared_ptr<Player> player)
 		if(player->state != PLAYER_STATE_IDLE)
 			return S_PLAYER_BUSY;
 		rm_player(player->name);
+		spdlog::info("player {} unregistered.", player->name);
 		return S_OK;
 	}
 	return S_PLAYER_INVALID;
@@ -132,6 +134,7 @@ STATUS_CODE Game::create_room(const string& player,
 	}
     auto nr = make_shared<Room>(room, p);
     add_room(nr);
+	spdlog::info("player {} created room {} with psw {}", player, room->name, room->psw);
     return S_OK;
 }
 
@@ -154,6 +157,7 @@ STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 		spdlog::debug("player {} already joined other room.", player);
 		return S_PLAYER_BUSY;
 	}
+	
 	return target->join(p, room->psw);
 }
 

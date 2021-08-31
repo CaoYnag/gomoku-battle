@@ -198,8 +198,8 @@ shared_ptr<cmd_t> to_cmd(vector<string>& tokens)
 shared_ptr<cmd_t> parse_cmd(const string& cmd)
 {
 	vector<string> tokens;
-	// 1. tokenize
-	string::size_type pos = -1;
+	// tokenize
+	string::size_type pos = 0;
 	while(pos != string::npos)
 	{
 		auto np = cmd.find(" ", pos + 1);

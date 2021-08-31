@@ -27,10 +27,10 @@ set(SRC
     ${PROJECT_SOURCE_DIR}/main.cpp
 )
 
-add_executable(server ${SRC})
-target_link_libraries(server utils svr)
+add_executable(gsvr ${SRC})
+target_link_libraries(gsvr utils svr)
 if(WIN32)
 endif()
 if(UNIX)
-	target_link_libraries(server pthread)
+	target_link_libraries(gsvr pthread)
 endif()

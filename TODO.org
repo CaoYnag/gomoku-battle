@@ -29,4 +29,5 @@ add logs. record infomations about user operation and exceptions.
 game and match should use defferent connections.
 *** TODO game-draw detect
 detect draw in Gomoku::check
+*** TODO MORE LOGS!!!
 ** GUI

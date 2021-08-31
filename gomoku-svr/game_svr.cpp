@@ -31,6 +31,7 @@ GameSvr::~GameSvr()
 int GameSvr::init()
 {
     _svr = make_shared<MsgSock>(GlobalConf::get()->PORT);
+	_svr->init();
     _svr->listen();
     spdlog::info("server listening in [{}].", GlobalConf::get()->PORT);
     return 0;
@@ -51,7 +52,7 @@ STATUS_CODE GameSvr::reg(shared_ptr<MsgSock> sock, shared_ptr<msg_reg> msg)
 {
 	// just accept as a new player.
 	// TODO token check and reconnection should be implemented in future.
-
+	spdlog::info("new connection: {}:{}", sock->ip(), sock->port());
 	auto agent = make_shared<UserAgent>(sock, msg->name);
 	auto s = _game->register_player(static_pointer_cast<Player>(agent));
 
