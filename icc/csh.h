@@ -20,6 +20,8 @@ private:
 	string prompt_str();
 	void execute(shared_ptr<cmd_t>);
 	void parse_and_execute(const string&);
+
+	void release();
 private:
 	/* execute cmds */
 	void execute_help(shared_ptr<cmd_t>);
@@ -43,4 +45,5 @@ public:
 	~Csh();
 
 	void run();
+	void close();
 };

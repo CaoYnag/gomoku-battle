@@ -30,4 +30,7 @@ game and match should use defferent connections.
 *** TODO game-draw detect
 detect draw in Gomoku::check
 *** TODO MORE LOGS!!!
+** ICC
+*** TODO beautiful status output
+*** TODO beautiful layout
 ** GUI

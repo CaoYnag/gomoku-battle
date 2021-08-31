@@ -1,6 +1,7 @@
 #include "csh.h"
 #include "cmd_io.h"
 #include <sstream>
+#include <thread>
 using namespace std;
 using namespace std::placeholders;
 
@@ -28,7 +29,25 @@ Csh::Csh() : _io(make_shared<SyncIO>()), _ua(make_shared<UserAgent>(_io)), _runn
 }
 
 Csh::~Csh()
-{}
+{
+	release();
+}
+
+void Csh::release()
+{
+	if(_ua) // release useragent
+	{
+		_ua->close();
+		_ua = nullptr;
+	}
+}
+
+void Csh::close()
+{
+	_io->println("Bye.");
+	_running = false;
+	release();
+}
 
 string Csh::prompt_str()
 {
@@ -55,6 +74,7 @@ void Csh::parse_and_execute(const string& str)
 {
 	try
 	{
+		if(str.empty()) return;
 		auto cmd = parse_cmd(str);
 		execute(cmd);
 	}
@@ -85,8 +105,7 @@ void Csh::execute_help(shared_ptr<cmd_t> raw)
 }
 void Csh::execute_exit(shared_ptr<cmd_t> raw)
 {
-	// TODO release res first.
-	_running = false;
+	close();
 }
 void Csh::execute_stat(shared_ptr<cmd_t> raw)
 {

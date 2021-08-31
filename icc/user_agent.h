@@ -13,7 +13,7 @@ using namespace std;
 // other svr msg, like roomlist, roominfo, just call callbacks in agent directly.
 typedef function<void(shared_ptr<msg_result>)> msg_callback;
 
-class UserAgent : public MsgSock
+class UserAgent : private MsgSock
 {
 protected:
 	shared_ptr<SyncIO> _io;
@@ -28,9 +28,13 @@ protected:
 
 	mutex _session_guard;
 	map<u64, msg_callback> _sessions; // session id : callbacks
+
+	bool _running;
 public:
 	UserAgent(shared_ptr<SyncIO> io);
     virtual ~UserAgent();
+
+	void close();
 
 	inline shared_ptr<player_t> player() { return _player; }
 	inline shared_ptr<room_t> room() { return _room; };
@@ -38,19 +42,14 @@ public:
 	void show_room_info(const room_t& room);
 public:
 	/* callbacks */
-	// void on_room_list();
-	// void on_room_create();
-	// void on_room_join();
-	// void on_room_exit();
-	// void on_change_state();
-	// void on_change_chess();
-	// void on_start_match();
-
 	void on_move(int x, int);
 	void on_match_end(u64 rslt);
 	void on_room_list(const vector<room_t>& rooms);
 	void on_room_info(u32 type, const room_t& room); // join/exit, change ct/st
 	void on_match_start(); // match started
+
+	// handle msg_result callbacks
+	void consume(shared_ptr<msg_result>);
 public:
 	void ping();
 	void status();

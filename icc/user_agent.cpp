@@ -15,21 +15,34 @@ enum PlayerState
 };
 
 
-UserAgent::UserAgent(shared_ptr<SyncIO> io) : _io(io), _state(PS_UNCONN)
+UserAgent::UserAgent(shared_ptr<SyncIO> io) : MsgSock(), _io(io), _running(true),
+											  _state(PS_UNCONN), _chesstype(CHESS_BLANK)
 {
 	_session = 0;
-	init();
+	if(init())
+		_io->errorln("failed init socket.");
 }
 
 UserAgent::~UserAgent()
 {}
 
+void UserAgent::close()
+{
+	_running = false;
+	MsgSock::close();
+}
+
 void UserAgent::connect(const string & ip, int port)
 {
-	auto ret = TcpSock::connect(ip, port);
-	if(!ret) _state = PS_UNREG;
-	else
+	auto ret = MsgSock::connect(ip, port);
+	if(ret) 
 		_io->errorln("error connected to ", ip,  ":", port);
+	else
+	{
+		// connected
+		_state = PS_UNREG;
+		thread(bind(&UserAgent::msg_proc, this)).detach();
+	}
 }
 
 void UserAgent::status()
@@ -86,10 +99,11 @@ void UserAgent::reg(const string& name)
 		{
 			if(msg->status)
 			{
-				_io->println("player ", name, " register failed: ", str_status_code(msg->status));
+				_io->errorln("player ", name, " register failed: ", str_status_code(msg->status));
 			}
 			else
 			{
+				_io->println("Welcome, ", name);
 				_state = PS_IDLE;
 				_player = make_shared<player_t>(name);
 			}
@@ -97,7 +111,7 @@ void UserAgent::reg(const string& name)
 }
 void UserAgent::unreg()
 {
-	// TODO finish unreg msg in msgsock first.
+	// TODO finish unreg msg in msgsock and complete this.
 	_state = PS_IDLE;
 }
 
@@ -279,7 +293,6 @@ void UserAgent::start_match()
 	}
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
-	int state = (PLAYER_STATE_PREPARE + PLAYER_STATE_READY) - _room->gs;
 	MsgSock::game_start();
 	lock_guard<mutex> slock(_session_guard);
 	_sessions[_session] = [&](shared_ptr<msg_result> msg)
@@ -312,26 +325,33 @@ void UserAgent::msg_proc()
 {
  	shared_ptr<msg_t> msg = nullptr;
 
-	while(true)
+	while(_running)
 	{
+		// TODO connection may lost here.
 		msg = rcv_msg();
 		{
-			// TODO change to unique_lock and shared_lock.
-			if(msg->msg_type == MSG_T_RESULT)
+			if(!msg)
 			{
-				auto rslt = static_pointer_cast<msg_result>(msg);
-				lock_guard<mutex> lock(_session_guard);
-				if(_sessions.count(msg->session))
-				{
-					_sessions[msg->session](rslt);
-					_sessions.erase(msg->session);
-				}
-				_io->println("unknown msg_results: ", rslt->status);
+				_io->errorln("rcv invalid msg.");
+				continue;
 			}
+			if(msg->msg_type == MSG_T_RESULT)
+				consume(static_pointer_cast<msg_result>(msg));
 			else
 				on_msg(msg);
 		}
 	}
+}
+
+void UserAgent::consume(shared_ptr<msg_result> rslt)
+{
+	lock_guard<mutex> lock(_session_guard);
+	if(_sessions.count(rslt->session))
+	{
+		_sessions[rslt->session](rslt);
+		_sessions.erase(rslt->session);
+	}
+	else _io->println("msg_results [", rslt->status, "] for unknown session [", rslt->session, "].");
 }
 
 void UserAgent::on_msg(shared_ptr<msg_t> msg)
@@ -367,7 +387,7 @@ void UserAgent::on_msg(shared_ptr<msg_t> msg)
 
 void UserAgent::on_move(int x, int y)
 {
-	
+	// TODO
 }
 
 void UserAgent::on_match_start()
@@ -388,7 +408,7 @@ string str_game_rslt(u64 code)
 }
 void UserAgent::on_match_end(u64 rslt)
 {
-	_state == PS_ROOM;
+	_state = PS_ROOM;
 	_io->println("game end: ", str_game_rslt(rslt));
 }
 

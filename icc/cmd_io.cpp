@@ -200,13 +200,16 @@ shared_ptr<cmd_t> parse_cmd(const string& cmd)
 	vector<string> tokens;
 	// tokenize
 	string::size_type pos = 0;
-	while(pos != string::npos)
+	while(true)
 	{
-		auto np = cmd.find(" ", pos + 1);
+		auto np = cmd.find(" ", pos);
 		if(np == string::npos)
+		{
 			tokens.emplace_back(cmd.substr(pos));
+			break;
+		}
 		else tokens.emplace_back(cmd.substr(pos, np - pos));
-		pos = np;
+		pos = np + 1;
 	}
 	return to_cmd(tokens);
 }
