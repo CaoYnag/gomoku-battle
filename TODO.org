@@ -33,4 +33,17 @@ detect draw in Gomoku::check
 ** ICC
 *** TODO beautiful status output
 *** TODO beautiful layout
+*** bugs
+**** TODO after reg, first room msg will be skip.
+like:
+1. conn xx xx
+2. reg aaa
+3. rl or rc # this won't be run.
+4. rl or rc (this can be rcved in svr)
+
+as tcpdump show, icc sent msg, but, game_svr did not got this msg.
+**** TODO exit room
+cache still remain in game svr.
+**** TODO complete unreg
+**** TODO error room list operation.
 ** GUI

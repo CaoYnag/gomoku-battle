@@ -31,6 +31,7 @@ public:
         _num = BOARD_POINT_NUM;
         _board = new int[_num];
     }
+	Gomoku(const Gomoku&) = delete;
     ~Gomoku()
     {
         delete[] _board;
@@ -150,12 +151,11 @@ int main(int argc, char** argv)
     gomoku.start();
     int x, y;
     int type = 1;
-    int ret = 1;
     while(!gomoku.end())
     {
         // system("clear");
         gomoku.draw_board();
-        ret = 1;
+        int ret = 1;
         while(ret)
         {
             if(type == CHESS_BLACK)

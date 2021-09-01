@@ -66,13 +66,18 @@ BOOST_AUTO_TEST_CASE(test_msg_t)
 BOOST_AUTO_TEST_CASE(test_msg_result)
 {
     {
+		// also test token and session
 		msg_result msg(0, "ok");
+		msg.token = 1;
+		msg.session = 2;
 		auto raw = pack(msg);
 		auto rslt = unpack_result(raw);
 		info(raw);
 		info(*rslt);
 		BOOST_REQUIRE_EQUAL(msg.status, rslt->status);
 		BOOST_REQUIRE_EQUAL(msg.result, rslt->result);
+		BOOST_REQUIRE_EQUAL(msg.session, rslt->session);
+		BOOST_REQUIRE_EQUAL(msg.token, rslt->token);
     }
     
     {

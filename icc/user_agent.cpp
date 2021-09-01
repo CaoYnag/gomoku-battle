@@ -1,3 +1,4 @@
+#include <spdlog/spdlog.h>
 #include "user_agent.h"
 #include <unistd.h>
 #include <thread>
@@ -41,6 +42,7 @@ void UserAgent::connect(const string & ip, int port)
 	{
 		// connected
 		_state = PS_UNREG;
+		_session = 0; // started session
 		thread(bind(&UserAgent::msg_proc, this)).detach();
 	}
 }
@@ -94,8 +96,8 @@ void UserAgent::reg(const string& name)
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
 	MsgSock::reg(name);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+	
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 			{
@@ -107,7 +109,7 @@ void UserAgent::reg(const string& name)
 				_state = PS_IDLE;
 				_player = make_shared<player_t>(name);
 			}
-		};
+		});
 }
 void UserAgent::unreg()
 {
@@ -125,6 +127,11 @@ void UserAgent::room_list()
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
 	MsgSock::req_rooms(); // not result response. do not need session callbacks
+	emit(_session, [&](shared_ptr<msg_result> msg)
+		{
+			// only return msg_error when failed.
+			_io->errorln("error get room list: ", str_status_code(msg->status));
+		});
 }
 
 void UserAgent::create_room(shared_ptr<room_t> r)
@@ -145,8 +152,8 @@ void UserAgent::create_room(shared_ptr<room_t> r)
 	_state = PS_ROOMING;
 	_room = r;
 	MsgSock::create_room(r->name, r->psw);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 			{
@@ -159,7 +166,7 @@ void UserAgent::create_room(shared_ptr<room_t> r)
 				_io->println("success created room ", _room->name);
 				_state = PS_ROOM;
 			}
-		};
+		});
 }
 
 void UserAgent::join_room(shared_ptr<room_t> r)
@@ -180,8 +187,8 @@ void UserAgent::join_room(shared_ptr<room_t> r)
 	_state = PS_ROOMING;
 	_room = r;
 	MsgSock::join_room(r->name, r->psw);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 			{
@@ -194,7 +201,7 @@ void UserAgent::join_room(shared_ptr<room_t> r)
 				_io->println("success joined room ", _room->name);
 				_state = PS_ROOM;
 			}
-		};
+		});
 	
 }
 void UserAgent::exit_room()
@@ -208,14 +215,14 @@ void UserAgent::exit_room()
 	++_session;
 	_state = PS_ROOMING;
 	MsgSock::exit_room(_room->name);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 				_io->println("error when exit room ", _room->name
 						  , ": ", str_status_code(msg->status));
 			_state = PS_IDLE;			
-		};
+		});
 }
 
 void UserAgent::change_chess()
@@ -233,8 +240,8 @@ void UserAgent::change_chess()
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
 	MsgSock::choose_chess(CHESS_SUM - _room->oct);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 				_io->println("error change chess: ", str_status_code(msg->status));
@@ -243,7 +250,7 @@ void UserAgent::change_chess()
 				_room->oct = CHESS_SUM - _room->oct;
 				_io->println("sucess changed chess.");
 			}
-		};
+		});
 	
 }
 void UserAgent::change_state()
@@ -262,8 +269,8 @@ void UserAgent::change_state()
 	++_session;
 	int state = (PLAYER_STATE_PREPARE + PLAYER_STATE_READY) - _room->gs;
 	MsgSock::user_state(state);
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 				_io->println("error change states: ", str_status_code(msg->status));
@@ -272,7 +279,7 @@ void UserAgent::change_state()
 				_room->gs = state;
 				_io->println("sucess changed states.");
 			}
-		};
+		});
 }
 void UserAgent::start_match()
 {
@@ -294,12 +301,12 @@ void UserAgent::start_match()
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
 	MsgSock::game_start();
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 				_io->println("error start match: ", str_status_code(msg->status));
-		};	
+		});	
 }
 void UserAgent::move(int x,  int y)
 {
@@ -312,12 +319,12 @@ void UserAgent::move(int x,  int y)
 	++_session;
 	MsgSock::move(x, y);
 	MsgSock::game_start();
-	lock_guard<mutex> slock(_session_guard);
-	_sessions[_session] = [&](shared_ptr<msg_result> msg)
+
+	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
 			if(msg->status)
 				_io->println("move failed: ", str_status_code(msg->status));
-		};	
+		});	
 }
 
 
@@ -339,6 +346,7 @@ void UserAgent::msg_proc()
 				consume(static_pointer_cast<msg_result>(msg));
 			else
 				on_msg(msg);
+			erase(msg);
 		}
 	}
 }
@@ -347,11 +355,23 @@ void UserAgent::consume(shared_ptr<msg_result> rslt)
 {
 	lock_guard<mutex> lock(_session_guard);
 	if(_sessions.count(rslt->session))
-	{
 		_sessions[rslt->session](rslt);
-		_sessions.erase(rslt->session);
-	}
+	
 	else _io->println("msg_results [", rslt->status, "] for unknown session [", rslt->session, "].");
+}
+
+void UserAgent::erase(shared_ptr<msg_t> msg)
+{
+	lock_guard<mutex> lock(_session_guard);
+	if(_sessions.count(msg->session))
+	   _sessions.erase(msg->session);
+}
+
+void UserAgent::emit(u64 session, msg_callback cb)
+{
+	spdlog::debug("added session cb: {}", session);
+	lock_guard<mutex> slock(_session_guard);
+	_sessions[session] = cb;
 }
 
 void UserAgent::on_msg(shared_ptr<msg_t> msg)

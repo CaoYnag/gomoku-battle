@@ -3,18 +3,18 @@
 
 int MsgSock::MAX_ILLEGAL_OPER = INT_MAX;
 
-MsgSock::MsgSock() : TcpSock(), _failures(0)
+MsgSock::MsgSock() : TcpSock(), _failures(0), _token(INVALID_TOKEN), _session(INVALID_SESSION)
 {}
 MsgSock::MsgSock(shared_ptr<TcpSock> ptr)
-    : TcpSock(ptr->sock(), ptr->addr()), _failures(0)
+    : TcpSock(ptr->sock(), ptr->addr()), _failures(0), _token(INVALID_TOKEN), _session(INVALID_SESSION)
 {}
-MsgSock::MsgSock(int port) : TcpSock(port), _failures(0)
+MsgSock::MsgSock(int port) : TcpSock(port), _failures(0), _token(INVALID_TOKEN), _session(INVALID_SESSION)
 {}
 MsgSock::MsgSock(const string& ip, int port)
-    : TcpSock(ip, port), _failures(0)
+    : TcpSock(ip, port), _failures(0), _token(INVALID_TOKEN), _session(INVALID_SESSION)
 {}
 MsgSock::MsgSock(SOCK sock, const sockaddr_in& addr)
-    : TcpSock(sock, addr), _failures(0)
+    : TcpSock(sock, addr), _failures(0), _token(INVALID_TOKEN), _session(INVALID_SESSION)
 {}
 MsgSock::~MsgSock()
 {}
@@ -142,15 +142,15 @@ int MsgSock::roominfo(u32 type, const room_t& room)
 
 int MsgSock::create_room(const string& name, const string& psw)
 {
-	return roominfo(ROOM_OPER_CREATE, room_t(name, psw));
+	return roominfo(RO_ROOM_CREATE, room_t(name, psw));
 }
 int MsgSock::join_room(const string& name, const string& psw)
 {
-	return roominfo(ROOM_OPER_JOIN, room_t(name, psw));
+	return roominfo(RO_ROOM_JOIN, room_t(name, psw));
 }
 int MsgSock::exit_room(const string& name)
 {
-	return roominfo(ROOM_OPER_EXIT, room_t(name));
+	return roominfo(RO_ROOM_EXIT, room_t(name));
 }
 
 int MsgSock::choose_chess(u32 type)

@@ -80,7 +80,7 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
     case MSG_T_ROOM:
     {
         auto oper = static_pointer_cast<msg_room>(msg);
-        if(oper->type == ROOM_OPER_CREATE)
+        if(oper->type == RO_ROOM_CREATE)
         {
 			auto s = svr->create_room(name, make_shared<room_t>(oper->room));
 			if(!s)
@@ -90,7 +90,7 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
 			}
 			rslt(s);
         }
-        else if(oper->type == ROOM_OPER_JOIN)
+        else if(oper->type == RO_ROOM_JOIN)
         {
 			auto s = svr->join_room(name, make_shared<room_t>(oper->room));
 			if(!s)
@@ -104,6 +104,7 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
         else rslt(S_ILLEGAL_OPER);
     }break;
     default:
+		
         break;
     }
     return 0;
@@ -121,7 +122,7 @@ int UserAgent::room(shared_ptr<msg_t> msg)
 		auto ct = static_pointer_cast<msg_chess>(msg);
 		auto s = svr->change_ct(_room->name, name, ct->type);
 		rslt(s);
-		// TODO notice guest here if success
+		// TODO notice guest here if success // done in GameSvr
     }break;
     case MSG_T_STATE:
     {
@@ -129,13 +130,13 @@ int UserAgent::room(shared_ptr<msg_t> msg)
 		auto sm = static_pointer_cast<msg_state>(msg);
 		auto s = svr->change_state(_room->name, name, sm->state);
 		rslt(s);
-		// TODO notice owner here
+		// TODO notice owner here // done in GameSvr
     }break;
     case MSG_T_ROOM:
     {
 		// only exit here now.
 		auto oper = static_pointer_cast<msg_room>(msg);
-		if(oper->type == ROOM_OPER_EXIT)
+		if(oper->type == RO_ROOM_EXIT)
 		{
 			auto s = svr->exit_room(name, _room->name);
 

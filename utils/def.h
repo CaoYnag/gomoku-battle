@@ -37,27 +37,31 @@ constexpr const u32 CHESS_SUM         = CHESS_BLACK + CHESS_WHITE;
 constexpr const u32 REQ_ROOM_LIST       = 0x1;
 constexpr const u32 REQ_GAME_START      = 0x2;
 
-constexpr const u32 ROOM_OPER_UNKNOWN = 0x0;
-constexpr const u32 ROOM_OPER_CREATE  = 0x1;
-constexpr const u32 ROOM_OPER_JOIN    = 0x2;
-constexpr const u32 ROOM_OPER_EXIT    = 0x3;
+// for msg room
 
+constexpr const u32 RI_UNKNOWN 			= 0x0;
+constexpr const u32 RI_PLAYER_JOIN	    = 0x1;
+constexpr const u32 RI_PLAYER_EXIT	    = 0x2;
+constexpr const u32 RI_PLAYER_STATE		= 0x3; // guest change state
+constexpr const u32 RI_PLAYER_CHESS		= 0x4; // room owner change chess
+
+constexpr const u32 RO_UNKNOWN			= 0x10;
+constexpr const u32 RO_ROOM_CREATE		= 0x11;
+constexpr const u32 RO_ROOM_JOIN		= 0x12;
+constexpr const u32 RO_ROOM_EXIT		= 0x13;
+
+// player state, used in room
 constexpr const u32 PLAYER_STATE_IDLE    = 0x0;
 constexpr const u32 PLAYER_STATE_PREPARE = 0x1;
 constexpr const u32 PLAYER_STATE_OWNER   = 0x2;
 constexpr const u32 PLAYER_STATE_READY   = 0x3;
 
-/* not full, player can join this room */
+// room state
 constexpr const u32 ROOM_STATE_OPEN   = 0x0; 
 constexpr const u32 ROOM_STATE_FULL   = 0x1;
 constexpr const u32 ROOM_STATE_MATCH  = 0x2;
 
 constexpr const u32 GAME_TARGET_ROOM  = 0x1;
-
-constexpr const u32 ROOM_INFO_UNKNOWN = 0x0;
-constexpr const u32 ROOM_INFO_JOIN    = 0x1;
-constexpr const u32 ROOM_INFO_EXIT    = 0x2;
-constexpr const u32 ROOM_INFO_OWNER   = 0x3;
 
 constexpr const u32 USER_STATE_PREPARE = 0x1;
 constexpr const u32 USER_STATE_READY   = 0x2;

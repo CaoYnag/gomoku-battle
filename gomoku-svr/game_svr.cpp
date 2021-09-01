@@ -18,10 +18,8 @@ shared_ptr<GameSvr> GameSvr::get()
     return _inst;
 }
 
-GameSvr::GameSvr() : _running(0)
+GameSvr::GameSvr() : _running(0), _game(make_shared<Game>()), _runner(make_shared<MatchRunner>())
 {
-	_game = make_shared<Game>();
-	_runner = make_shared<MatchRunner>();
 }
 GameSvr::~GameSvr()
 {
@@ -71,32 +69,37 @@ STATUS_CODE GameSvr::reg(shared_ptr<MsgSock> sock, shared_ptr<msg_reg> msg)
 
 void GameSvr::handle_new_conn(shared_ptr<MsgSock> sock)
 {
-    auto msg = sock->rcv_msg();
-    while(!msg || msg->msg_type != MSG_T_REGISTER)
-    {
-        if(sock->fail()) break;
-        sock->rslt(S_PLAYER_INVALID);
-        msg = sock->rcv_msg(); // TODO maybe need to set timeout here.
-    }
+	shared_ptr<UserAgent> agent = nullptr;
 
-    if(!msg || msg->msg_type != MSG_T_REGISTER)
-    {
-        release_conn(sock);
-        return;
-    }
-    auto rmsg = static_pointer_cast<msg_reg>(msg);
-
-	auto s = reg(sock, rmsg);
-	msg_result rslt(s);
-	rslt.session = msg->session;
-	if(!s) rslt.token = get_agent(rmsg->name)->token();
-	sock->send_msg(rslt);
-	
-	if(!s)
+	while(true)
 	{
-		auto agent = _conns[rmsg->name];
-		agent->mainloop();
+		auto msg = sock->rcv_msg();
+		if(!msg || msg->msg_type != MSG_T_REGISTER)
+		{
+			if(sock->fail()) break;
+			sock->rslt(S_PLAYER_INVALID);
+			continue;
+		}
+
+		
+		auto rmsg = static_pointer_cast<msg_reg>(msg);
+
+		auto s = reg(sock, rmsg);
+		msg_result rslt(s);
+		sock->session(msg->session);
+		if(!s) sock->token(get_agent(rmsg->name)->token());
+		sock->send_msg(rslt);
+		if(!s)
+		{
+			agent = _conns[rmsg->name];
+			break;
+		}
 	}
+    
+	if(agent)
+		agent->mainloop();
+	
+	release_conn(sock); // after all, release connection.
  }
 void GameSvr::release_conn(shared_ptr<MsgSock> sock)
 {
@@ -138,9 +141,12 @@ STATUS_CODE GameSvr::exit_room(const string& player, const string& room)
 	auto s = _game->exit_room(player, room);
 	if(s == S_OK)
 	{
-		auto r = _game->get_room(room)->_room;
-		if(r && r->owner != player)
-			get_agent(r->owner)->sock()->roominfo(RI_PLAYER_EXIT, *r);
+		if(_game->get_room(room))
+		{
+			auto r = _game->get_room(room)->_room;
+			if(r->owner != player)
+				get_agent(r->owner)->sock()->roominfo(RI_PLAYER_EXIT, *r);
+		}
 	}
 	return s;
 }

@@ -8,19 +8,19 @@
 using namespace std;
 using namespace io::serialize;
 
-void info(msg_result msg)
+void info(const msg_result& msg)
 {
 	// cout << "result: " << (int)msg.status << "-" << msg.result << "-" << msg.result.length() << endl;
 }
-void info(msg_request msg)
+void info(const msg_request& msg)
 {
 	cout << "request: " << msg.target << "-" << msg.oper << endl;
 }
-void info(msg_reg msg)
+void info(const msg_reg& msg)
 {
 	cout << "reg: " << msg.name << ": " << msg.name.length() << endl;
 }
-void info(msg_roomlist msg)
+void info(const msg_roomlist& msg)
 {
 	cout << "roomlist: " << msg.rooms.size() << "\n";
 	for(auto& room : msg.rooms)
@@ -28,23 +28,23 @@ void info(msg_roomlist msg)
 		cout << room .id << " " << room .name << " " << room .psw << " " << room.state << endl;
 	}
 }
-void info(msg_room msg)
+void info(const msg_room& msg)
 {
 	cout << "oper: " << (int)msg.type << " " << msg.room.name << " " << msg.room.psw << endl;
 }
-void info(msg_chess msg)
+void info(const msg_chess& msg)
 {
 	cout << "chess: " << (int)msg.type << endl;
 }
-void info(msg_state msg)
+void info(const msg_state& msg)
 {
 	cout << "state: " << (int)msg.state << endl;
 }
-void info(msg_game msg)
+void info(const msg_game& msg)
 {
 	cout << "game: " << msg.state << "-" << msg.ex << endl;
 }
-void info(msg_move msg)
+void info(const msg_move& msg)
 {
 	cout << "move: " << msg.chess << "-(" << (int)msg.x << ", " << (int)msg.y << ")" << endl;
 }

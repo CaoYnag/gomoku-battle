@@ -29,6 +29,7 @@ public:
     MsgSock(int port);
     MsgSock(const string& ip, int port);
     MsgSock(SOCK sock, const sockaddr_in& addr);
+	MsgSock(const MsgSock&) = delete;
     virtual ~MsgSock();
 
     shared_ptr<MsgSock> accept_msg_sock();

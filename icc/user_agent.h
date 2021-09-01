@@ -13,7 +13,7 @@ using namespace std;
 // other svr msg, like roomlist, roominfo, just call callbacks in agent directly.
 typedef function<void(shared_ptr<msg_result>)> msg_callback;
 
-class UserAgent : private MsgSock
+class UserAgent : protected MsgSock
 {
 protected:
 	shared_ptr<SyncIO> _io;
@@ -48,8 +48,6 @@ public:
 	void on_room_info(u32 type, const room_t& room); // join/exit, change ct/st
 	void on_match_start(); // match started
 
-	// handle msg_result callbacks
-	void consume(shared_ptr<msg_result>);
 public:
 	void ping();
 	void status();
@@ -73,4 +71,10 @@ public:
 	void msg_proc();
 	/* handle msg */
 	void on_msg(shared_ptr<msg_t>);
+	// handle msg_result callbacks, just consume msg, do not erase it.
+	// so it may be better if use a read lock.
+	void consume(shared_ptr<msg_result>);
+	void emit(u64 session, msg_callback cb);
+	/* clear sessins when end all posible msg proc. */
+	void erase(shared_ptr<msg_t>);
 };

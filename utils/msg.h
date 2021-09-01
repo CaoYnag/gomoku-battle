@@ -91,17 +91,6 @@ struct msg_roomlist : public msg_t
     msg_roomlist(const vector<room_t>& rooms);
 };
 
-/* 
- * player join or exit
- * player change ct or state
- */
-enum ROOM_INFO
-{
-	RI_PLAYER_JOIN,
-	RI_PLAYER_EXIT,
-	RI_PLAYER_STATE,
-	RI_PLAYER_CHESS
-};
 struct msg_room : public msg_t
 {
     RTTR_ENABLE(msg_t)

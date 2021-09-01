@@ -157,7 +157,6 @@ STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 		spdlog::debug("player {} already joined other room.", player);
 		return S_PLAYER_BUSY;
 	}
-	
 	return target->join(p, room->psw);
 }
 
@@ -176,9 +175,11 @@ STATUS_CODE Game::exit_room(const string& player, const string& room)
 		return S_PLAYER_INVALID;
 	}
 	auto ret = r->leave(p);
+	spdlog::debug("player {} exit room {}.", player, room);
 	if(ret == S_ROOM_EMPTY)
 	{
 		rm_room(r->_room->name);
+		spdlog::debug("no more player in room {}, destroyed.", room);
 		return S_OK;
 	}
 	return ret;
