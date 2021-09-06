@@ -25,6 +25,7 @@ STATUS_CODE Room::join(shared_ptr<Player> user, const string& psw)
 		return S_ROOM_FULL;
     if(psw != _room->psw)
 		return S_ROOM_ILLEGAL_ACCESS;
+	_room->guest = user->name;
     _guest = user;
     _guest->state = PLAYER_STATE_PREPARE; // default state
 	_room->state = ROOM_STATE_FULL;
@@ -47,6 +48,7 @@ STATUS_CODE Room::leave(shared_ptr<Player> user)
     {
 		user->state = PLAYER_STATE_IDLE; // recover to default state
 		_room->gs = PLAYER_STATE_PREPARE;
+		_room->state = ROOM_STATE_OPEN;
 		if(_guest)
 		{
 			_owner = _guest;

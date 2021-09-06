@@ -127,9 +127,10 @@ STATUS_CODE Game::create_room(const string& player,
 	}
 	
 	lock_guard<mutex> lock(_room_guard);
-    if(_rmap.count(room->name))
+	spdlog::info("room {} count {}", room->name, _rmap.count(room->name));
+	if(get_room(room->name))
 	{
-		spdlog::debug("error create room {} by {}: room already eists.", room->name, player);
+		spdlog::debug("error create room {} by {}: room already exists.", room->name, player);
 		return S_ROOM_EXISTS;
 	}
     auto nr = make_shared<Room>(room, p);
@@ -157,6 +158,7 @@ STATUS_CODE Game::join_room(const string& player, shared_ptr<room_t> room)
 		spdlog::debug("player {} already joined other room.", player);
 		return S_PLAYER_BUSY;
 	}
+
 	return target->join(p, room->psw);
 }
 
@@ -175,11 +177,11 @@ STATUS_CODE Game::exit_room(const string& player, const string& room)
 		return S_PLAYER_INVALID;
 	}
 	auto ret = r->leave(p);
-	spdlog::debug("player {} exit room {}.", player, room);
+	spdlog::info("player {} exit room {}.", player, room);
 	if(ret == S_ROOM_EMPTY)
 	{
-		rm_room(r->_room->name);
-		spdlog::debug("no more player in room {}, destroyed.", room);
+		rm_room(room);
+		spdlog::info("no more player in room {}, destroyed.", room);
 		return S_OK;
 	}
 	return ret;

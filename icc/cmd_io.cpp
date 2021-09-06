@@ -17,7 +17,7 @@ const string CMDS[] =
 	"rc",
 	"rj",
 	"rq",
-	"ct",
+	"rt",
 	"rs",
 	"start",
 	"mv",
@@ -71,6 +71,7 @@ string help_msg(int type)
 		   << "\trc   \tcreate room\n"
 		   << "\trj   \tjoin room\n"
 		   << "\trq   \tquit room\n"
+		   << "\trt	  \tchange chess\n"
 		   << "\trs   \tchange state\n"
 		   << "\tstart\tstart game\n"
 		   << "game cmds:\n"

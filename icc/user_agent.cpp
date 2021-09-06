@@ -221,6 +221,7 @@ void UserAgent::exit_room()
 			if(msg->status)
 				_io->println("error when exit room ", _room->name
 						  , ": ", str_status_code(msg->status));
+			else _io->println("exit room success.");
 			_state = PS_IDLE;			
 		});
 }
@@ -300,7 +301,7 @@ void UserAgent::start_match()
 	}
 	lock_guard<mutex> lock(_sock_guard);
 	++_session;
-	MsgSock::game_start();
+	MsgSock::start_game();
 
 	emit(_session, [&](shared_ptr<msg_result> msg)
 		{
@@ -408,6 +409,7 @@ void UserAgent::on_msg(shared_ptr<msg_t> msg)
 void UserAgent::on_move(int x, int y)
 {
 	// TODO
+	_io->println("player moves on {", x, ", ", y, "}");
 }
 
 void UserAgent::on_match_start()
@@ -434,9 +436,13 @@ void UserAgent::on_match_end(u64 rslt)
 
 void UserAgent::on_room_list(const vector<room_t>& rooms)
 {
+	// TODO better print here.
+	_io->println("---------ROOM LIST---------");
 	for(const auto& r : rooms)
 	{
-		_io->println(r.name, " ", r.state);
+		_io->println(r.name, " ", r.state, "\n", r.owner, " ", r.oct, "\n");
+		if(!r.guest.empty())
+			_io->println(r.guest, " ", r.gs, "\n");
 	}
 }
 

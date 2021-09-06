@@ -23,6 +23,7 @@ int Match::move(const string& player, int x, int y)
     auto ct = player_ct(player);
     if(ct != CHESS_BLACK || ct != CHESS_WHITE)
 	return 1; // TODO magic num?
+
     return _gmk.put(x, y, ct);
 }
 

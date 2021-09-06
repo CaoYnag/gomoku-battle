@@ -118,7 +118,12 @@ int MsgSock::rslt(u32 stat, const string& rslt)
 
 int MsgSock::req_rooms()
 {
-    return req(0, 0); // TODO no other req now.
+    return req(REQ_ROOM_LIST, 0); // TODO no other req now.
+}
+
+int MsgSock::start_game()
+{
+	return req(REQ_GAME_START, 0);
 }
 
 int MsgSock::req(u32 target, u32 oper)

@@ -67,7 +67,8 @@ public:
     int set_chess(u32 type);
     int snd_chess(u32 type);
     int user_state(u32 state);
-    int game_start();
+	int start_game();
+	int game_start();
     int game_win();
     int game_lose();
     int game_draw();

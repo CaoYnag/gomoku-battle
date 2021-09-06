@@ -27,8 +27,6 @@ int UserAgent::rslt(u32 code, const string& msg)
 	
 void UserAgent::mainloop()
 {
-    shared_ptr<msg_t> msg = _sock->rcv_msg();
-
 	try
 	{
 		while(_state != USER_STATE_ERR)
@@ -93,13 +91,14 @@ int UserAgent::idle(shared_ptr<msg_t> msg)
         else if(oper->type == RO_ROOM_JOIN)
         {
 			auto s = svr->join_room(name, make_shared<room_t>(oper->room));
+			rslt(s);
 			if(!s)
 			{
 				_state = USER_STATE_ROOM; // sucess create a room, enter `ROOM` state.
 				_room = svr->game()->get_room(oper->room.name)->_room;
 				_sock->roominfo(RI_PLAYER_JOIN, *_room);
-				// TODO notice owner
-			} else rslt(s);
+				// TODO noticed owner in game_svr
+			}
         }
         else rslt(S_ILLEGAL_OPER);
     }break;
@@ -153,7 +152,7 @@ int UserAgent::room(shared_ptr<msg_t> msg)
     {
 		// only `start` request now.
 		auto req = static_pointer_cast<msg_request>(msg);
-		if(req->oper == REQ_GAME_START)
+		if(req->target == REQ_GAME_START)
 		{
 			auto s = svr->start_match(_room->name, name);
 			if(!s)
